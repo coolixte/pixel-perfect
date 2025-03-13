@@ -3,6 +3,8 @@ import sys
 import os
 import math
 import settings  # Import settings
+from cursor_manager import CursorManager
+from pixel_animation import PixelAnimation  # Import our new animation system
 
 # Initialize pygame
 pygame.init()
@@ -192,7 +194,21 @@ def main():
     title_scale = settings.TITLE_SCALE
     title_hover = False
     
+    # Initialize cursor manager
+    cursor_manager = CursorManager()
+    
+    # Initialize pixel animation system
+    pixel_animation = PixelAnimation()
+    
+    # For calculating delta time
+    last_time = pygame.time.get_ticks() / 1000.0
+    
     while running:
+        # Calculate delta time
+        current_time = pygame.time.get_ticks() / 1000.0
+        dt = current_time - last_time
+        last_time = current_time
+        
         mouse_pos = pygame.mouse.get_pos()
         
         # Handle events
@@ -201,6 +217,9 @@ def main():
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button
+                    # Spawn particles at click position
+                    pixel_animation.spawn_particles(event.pos[0], event.pos[1])
+                    
                     if play_button.check_click(event.pos):
                         print("Play button clicked!")
                         # Add game start logic here
@@ -248,6 +267,24 @@ def main():
             center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
         )
         
+        # Check if mouse is hovering over any buttons (excluding title)
+        hovering_button = (
+            play_button.hovered or 
+            options_button.hovered or 
+            exit_button.hovered
+        )
+        
+        # Update cursor state with separate title hover parameter
+        cursor_manager.update(
+            mouse_pos, 
+            pygame.mouse.get_pressed(), 
+            hovering_button=hovering_button,
+            hovering_title=title_hover
+        )
+        
+        # Update pixel animation
+        pixel_animation.update(dt, settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
+        
         # Draw
         screen.fill(settings.BLACK)
         
@@ -264,6 +301,12 @@ def main():
         
         # Draw name image in foreground (last layer)
         screen.blit(scaled_name_img, name_rect)
+        
+        # Draw pixel animation (should be after UI elements but before cursor)
+        pixel_animation.draw(screen)
+        
+        # Draw the custom cursor (should be last)
+        cursor_manager.draw(screen)
         
         # Update display
         pygame.display.flip()

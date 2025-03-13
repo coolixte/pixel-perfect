@@ -29,9 +29,22 @@ PLAY_BUTTON_Y_OFFSET = -20  # Offset from center of screen
 OPTIONS_BUTTON_SCALE = 0.40
 BUTTON_SPACING_MULTIPLIER = 1.2  # Spacing between buttons as a multiplier of button height
 
+# Cursor settings
+CURSOR_NORMAL = "cursor_normal.png"
+CURSOR_HOVER = "cursor_hovering_selectable_item.png"
+CURSOR_CLICK = "cursor_click.png"
+CURSOR_ZOOM = "cursor_zoom.png"  # New zoom cursor for title hover
+CURSOR_VISIBLE = False  # Hide the default system cursor
+
+# Cursor scaling settings
+CURSOR_NORMAL_SCALE = 0.7
+CURSOR_HOVER_SCALE = 0.7
+CURSOR_CLICK_SCALE = 0.7
+CURSOR_ZOOM_SCALE = 0.7
+
 # Exit button settings
 EXIT_BUTTON_SCALE = 0.18
-EXIT_BUTTON_X_OFFSET = 0  # X offset from center of screen (positive = right)
+EXIT_BUTTON_X_OFFSET = -3  # X offset from center of screen (positive = right)
 EXIT_BUTTON_Y_OFFSET = 200  # Y offset from center of screen (negative = up)
 
 # Border settings
@@ -47,3 +60,13 @@ HOVER_DARKNESS = 50  # 0-255, higher is darker
 
 # Animation settings
 FPS = 60  # Frames per second
+
+# Pixel animation settings
+PIXEL_MIN_SIZE = 2
+PIXEL_MAX_SIZE = 4
+PIXEL_MIN_COUNT = 5
+PIXEL_MAX_COUNT = 15
+PIXEL_MIN_INTERVAL = 4.0  # Minimum seconds between random animations
+PIXEL_MAX_INTERVAL = 8.0  # Maximum seconds between random animations
+PIXEL_CLICK_COUNT = 10    # Number of particles to spawn on click
+PIXEL_GRAVITY = 1.5      # Gravity strength (0 = no gravity, higher values = stronger gravity)

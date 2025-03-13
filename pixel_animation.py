@@ -1,0 +1,158 @@
+import pygame
+import random
+import math
+import settings
+
+class PixelParticle:
+    """Represents a single pixel particle in the animation."""
+    def __init__(self, x, y, velocity_x, velocity_y, size=3, color=(255, 255, 255)):
+        """
+        Initialize a pixel particle.
+        
+        Args:
+            x (float): Initial x position
+            y (float): Initial y position
+            velocity_x (float): Initial x velocity
+            velocity_y (float): Initial y velocity
+            size (int): Size of the pixel in pixels
+            color (tuple): RGB color tuple
+        """
+        self.x = x
+        self.y = y
+        self.velocity_x = velocity_x
+        self.velocity_y = velocity_y
+        self.size = size
+        self.color = color
+        # No longer using lifetime or alpha for fading
+        
+    def update(self, dt, screen_height):
+        """
+        Update the particle position and properties.
+        
+        Args:
+            dt (float): Time delta in seconds
+            screen_height (int): Height of the screen for boundary checking
+        
+        Returns:
+            bool: True if the particle is still on screen, False if it should be removed
+        """
+        # Update position based on velocity
+        self.x += self.velocity_x * dt
+        self.y += self.velocity_y * dt
+        
+        # Apply gravity from settings
+        self.velocity_y += settings.PIXEL_GRAVITY * dt * 60  # Scale by dt and target 60fps
+        
+        # Add slight drag/air resistance
+        self.velocity_x *= 0.99
+        
+        # Check if particle has fallen off the bottom of the screen
+        if self.y > screen_height:
+            return False
+            
+        return True
+        
+    def draw(self, surface):
+        """
+        Draw the particle on the given surface.
+        
+        Args:
+            surface (Surface): Pygame surface to draw on
+        """
+        # Draw a fully opaque pixel
+        pygame.draw.rect(
+            surface, 
+            self.color, 
+            pygame.Rect(int(self.x), int(self.y), self.size, self.size)
+        )
+
+
+class PixelAnimation:
+    """Manages multiple pixel particles for animations."""
+    def __init__(self):
+        """Initialize the pixel animation system."""
+        self.particles = []
+        self.last_random_spawn = 0
+        self.random_spawn_interval = random.uniform(
+            settings.PIXEL_MIN_INTERVAL, 
+            settings.PIXEL_MAX_INTERVAL
+        )
+        
+    def spawn_particles(self, x, y, count=None):
+        """
+        Spawn a group of particles at the given position.
+        
+        Args:
+            x (int): X-coordinate to spawn particles
+            y (int): Y-coordinate to spawn particles
+            count (int, optional): Number of particles to spawn. If None, uses PIXEL_CLICK_COUNT.
+        """
+        if count is None:
+            count = settings.PIXEL_CLICK_COUNT
+            
+        for _ in range(count):
+            # Random initial velocity in all directions
+            angle = random.uniform(0, 2 * math.pi)
+            speed = random.uniform(100, 200)
+            velocity_x = math.cos(angle) * speed
+            velocity_y = math.sin(angle) * speed
+            
+            # Random size variation
+            size = random.randint(settings.PIXEL_MIN_SIZE, settings.PIXEL_MAX_SIZE)
+            
+            # Pure white pixels
+            color = (255, 255, 255)
+            
+            # Create and add the particle
+            particle = PixelParticle(x, y, velocity_x, velocity_y, size, color)
+            self.particles.append(particle)
+    
+    def spawn_random_particles(self, screen_width, screen_height):
+        """
+        Spawn particles at a random location on the screen.
+        
+        Args:
+            screen_width (int): Width of the screen
+            screen_height (int): Height of the screen
+        """
+        # Choose a random position that's not too close to the edges
+        margin = 100
+        x = random.randint(margin, screen_width - margin)
+        y = random.randint(margin, screen_height - margin)
+        
+        # Spawn fewer particles for random events
+        count = random.randint(settings.PIXEL_MIN_COUNT, settings.PIXEL_MAX_COUNT)
+        self.spawn_particles(x, y, count=count)
+    
+    def update(self, dt, screen_width, screen_height):
+        """
+        Update all particles and check for random spawn events.
+        
+        Args:
+            dt (float): Time delta in seconds
+            screen_width (int): Width of the screen
+            screen_height (int): Height of the screen
+        """
+        # Update existing particles and remove those that fall off the screen
+        self.particles = [p for p in self.particles if p.update(dt, screen_height)]
+        
+        # Check if it's time for a random spawn
+        self.last_random_spawn += dt
+        if self.last_random_spawn >= self.random_spawn_interval:
+            self.spawn_random_particles(screen_width, screen_height)
+            self.last_random_spawn = 0
+            # Set a new random interval
+            self.random_spawn_interval = random.uniform(
+                settings.PIXEL_MIN_INTERVAL, 
+                settings.PIXEL_MAX_INTERVAL
+            )
+    
+    def draw(self, surface):
+        """
+        Draw all particles on the given surface.
+        
+        Args:
+            surface (Surface): Pygame surface to draw on
+        """
+        for particle in self.particles:
+            particle.draw(surface)
