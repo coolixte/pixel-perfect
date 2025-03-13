@@ -27,6 +27,7 @@ class CursorManager:
         self.is_hovering = False
         self.is_clicking = False
         self.is_zooming = False
+        self.mouse_in_window = False  # Track if mouse is inside the window
         
         # Hide the system cursor if specified in settings
         pygame.mouse.set_visible(CURSOR_VISIBLE)
@@ -60,7 +61,7 @@ class CursorManager:
             pygame.draw.rect(fallback, (255, 255, 255, 180), (0, 0, 16, 16))
             return fallback
     
-    def update(self, mouse_pos, mouse_pressed, hovering_button=False, hovering_title=False):
+    def update(self, mouse_pos, mouse_pressed, hovering_button=False, hovering_title=False, mouse_in_window=False):
         """
         Update the cursor state based on mouse position and button state.
         
@@ -69,10 +70,12 @@ class CursorManager:
             mouse_pressed: Boolean indicating if mouse button is pressed
             hovering_button: Boolean indicating if mouse is over a button
             hovering_title: Boolean indicating if mouse is over the title
+            mouse_in_window: Boolean indicating if mouse is inside the window
         """
         self.is_hovering = hovering_button
         self.is_clicking = mouse_pressed[0]  # Left mouse button
         self.is_zooming = hovering_title
+        self.mouse_in_window = mouse_in_window
         
         # Determine which cursor to display
         if self.is_clicking:
@@ -91,5 +94,7 @@ class CursorManager:
         Args:
             surface: The pygame surface to draw the cursor on
         """
-        mouse_pos = pygame.mouse.get_pos()
-        surface.blit(self.current_cursor, mouse_pos) 
+        # Only draw the cursor if the mouse is inside the window
+        if self.mouse_in_window:
+            mouse_pos = pygame.mouse.get_pos()
+            surface.blit(self.current_cursor, mouse_pos) 

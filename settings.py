@@ -59,14 +59,15 @@ NAME_BOTTOM_PADDING = 30  # Padding from the bottom of the screen
 HOVER_DARKNESS = 50  # 0-255, higher is darker
 
 # Animation settings
-FPS = 60  # Frames per second
+FPS = 120  # Frames per second
 
 # Pixel animation settings
 PIXEL_MIN_SIZE = 2
 PIXEL_MAX_SIZE = 4
 PIXEL_MIN_COUNT = 5
 PIXEL_MAX_COUNT = 15
-PIXEL_MIN_INTERVAL = 4.0  # Minimum seconds between random animations
-PIXEL_MAX_INTERVAL = 8.0  # Maximum seconds between random animations
+PIXEL_MIN_INTERVAL = 2.0  # Minimum seconds between random animations
+PIXEL_MAX_INTERVAL = 6.0  # Maximum seconds between random animations
 PIXEL_CLICK_COUNT = 10    # Number of particles to spawn on click
+PIXEL_BUTTON_HOVER_COUNT = 5  # Number of particles to spawn when hovering over buttons
 PIXEL_GRAVITY = 1.5      # Gravity strength (0 = no gravity, higher values = stronger gravity)

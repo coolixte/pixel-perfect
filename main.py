@@ -200,6 +200,9 @@ def main():
     # Initialize pixel animation system
     pixel_animation = PixelAnimation()
     
+    # Track if mouse is inside the window
+    mouse_in_window = False
+    
     # For calculating delta time
     last_time = pygame.time.get_ticks() / 1000.0
     
@@ -215,6 +218,16 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.MOUSEMOTION:
+                # Check if mouse is inside the window
+                x, y = event.pos
+                mouse_in_window = (0 <= x < settings.SCREEN_WIDTH and 0 <= y < settings.SCREEN_HEIGHT)
+            elif event.type == pygame.ACTIVEEVENT:
+                # Handle window focus/unfocus events
+                if event.gain == 0 and event.state == 1:  # Mouse left the window
+                    mouse_in_window = False
+                elif event.gain == 1 and event.state == 1:  # Mouse entered the window
+                    mouse_in_window = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button
                     # Spawn particles at click position
@@ -239,6 +252,9 @@ def main():
         play_button.check_hover(mouse_pos)
         options_button.check_hover(mouse_pos)
         exit_button.check_hover(mouse_pos)
+        
+        # Check button hover for pixel animations
+        pixel_animation.check_button_hover([play_button, options_button, exit_button])
         
         # Calculate title hover effect (moves up and down slightly)
         time = pygame.time.get_ticks() / 1000  # Convert to seconds
@@ -279,7 +295,8 @@ def main():
             mouse_pos, 
             pygame.mouse.get_pressed(), 
             hovering_button=hovering_button,
-            hovering_title=title_hover
+            hovering_title=title_hover,
+            mouse_in_window=mouse_in_window
         )
         
         # Update pixel animation

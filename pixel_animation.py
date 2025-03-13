@@ -77,6 +77,7 @@ class PixelAnimation:
             settings.PIXEL_MIN_INTERVAL, 
             settings.PIXEL_MAX_INTERVAL
         )
+        self.button_hover_states = {}  # Track button hover states
         
     def spawn_particles(self, x, y, count=None):
         """
@@ -106,6 +107,63 @@ class PixelAnimation:
             # Create and add the particle
             particle = PixelParticle(x, y, velocity_x, velocity_y, size, color)
             self.particles.append(particle)
+    
+    def spawn_button_hover_particles(self, button):
+        """
+        Spawn particles at random positions along the button's edge when hovered.
+        
+        Args:
+            button: The button object being hovered
+        """
+        # Get button rect
+        rect = button.rect
+        
+        # Spawn the specified number of particles
+        for _ in range(settings.PIXEL_BUTTON_HOVER_COUNT):
+            # Choose a random edge of the button (0=top, 1=right, 2=bottom, 3=left)
+            edge = random.randint(0, 3)
+            
+            if edge == 0:  # Top edge
+                x = random.randint(rect.left, rect.right)
+                y = rect.top
+            elif edge == 1:  # Right edge
+                x = rect.right
+                y = random.randint(rect.top, rect.bottom)
+            elif edge == 2:  # Bottom edge
+                x = random.randint(rect.left, rect.right)
+                y = rect.bottom
+            else:  # Left edge
+                x = rect.left
+                y = random.randint(rect.top, rect.bottom)
+            
+            # Create particles with slightly different parameters for button hover
+            angle = random.uniform(0, 2 * math.pi)
+            speed = random.uniform(50, 150)  # Slightly slower than click particles
+            velocity_x = math.cos(angle) * speed
+            velocity_y = math.sin(angle) * speed
+            
+            size = random.randint(settings.PIXEL_MIN_SIZE, settings.PIXEL_MAX_SIZE)
+            color = (255, 255, 255)
+            
+            particle = PixelParticle(x, y, velocity_x, velocity_y, size, color)
+            self.particles.append(particle)
+    
+    def check_button_hover(self, buttons):
+        """
+        Check if buttons are being hovered and spawn particles if needed.
+        
+        Args:
+            buttons (list): List of button objects to check
+        """
+        for button in buttons:
+            button_id = id(button)  # Use object ID as unique identifier
+            
+            # If button is hovered now but wasn't before, spawn particles
+            if button.hovered and not self.button_hover_states.get(button_id, False):
+                self.spawn_button_hover_particles(button)
+            
+            # Update hover state
+            self.button_hover_states[button_id] = button.hovered
     
     def spawn_random_particles(self, screen_width, screen_height):
         """
