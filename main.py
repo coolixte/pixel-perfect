@@ -41,6 +41,8 @@ play_btn = load_image("PlayBtn.png")
 play_click = load_image("PlayClick.png")
 opt_btn = load_image("OptBtn.png")
 opt_click = load_image("OptClick.png")
+exit_btn = load_image("ExitBtn.png")
+exit_click = load_image("ExitClick.png")
 
 # Button class
 class Button:
@@ -66,10 +68,16 @@ class Button:
             self.normal_img = normal_img
             self.clicked_img = clicked_img
             
+        # Create a darkened version of the normal image for hover state
+        self.hover_img = self.normal_img.copy()
+        dark_surface = pygame.Surface(self.hover_img.get_size(), pygame.SRCALPHA)
+        dark_surface.fill((0, 0, 0, 50))  # Semi-transparent black
+        self.hover_img.blit(dark_surface, (0, 0))
+        
         self.image = self.normal_img
         self.rect = self.image.get_rect(center=(x, y))
         self.clicked = False
-        self.action_time = 0
+        self.hovered = False
         
     def draw(self, surface):
         """
@@ -93,24 +101,47 @@ class Button:
         if self.rect.collidepoint(pos):
             self.clicked = True
             self.image = self.clicked_img
-            self.action_time = pygame.time.get_ticks()
             return True
         return False
     
-    def update(self):
-        """Update button state."""
-        # Reset button after 200ms
-        if self.clicked and pygame.time.get_ticks() - self.action_time > 200:
+    def check_hover(self, pos):
+        """
+        Check if the button is being hovered over.
+        
+        Args:
+            pos (tuple): Mouse position (x, y)
+        """
+        if self.rect.collidepoint(pos):
+            self.hovered = True
+            if not self.clicked:  # Only show hover effect if not clicked
+                self.image = self.hover_img
+        else:
+            self.hovered = False
+            if not self.clicked:  # Only reset to normal if not clicked
+                self.image = self.normal_img
+    
+    def release(self):
+        """Release the button when mouse button is released."""
+        if self.clicked:
             self.clicked = False
-            self.image = self.normal_img
+            if self.hovered:
+                self.image = self.hover_img
+            else:
+                self.image = self.normal_img
 
 # Create buttons with scaling (0.7 = 70% of original size)
 button_scale = 0.40
 # Center the buttons horizontally, position play button lower than the middle of the screen
-play_button = Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50, play_btn, play_click, scale=button_scale)
+play_button = Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20, play_btn, play_click, scale=button_scale)
 # Position options button below the play button with proper spacing
 button_spacing = int(play_button.rect.height * 1.2)  # 20% spacing between buttons
-options_button = Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50 + button_spacing, opt_btn, opt_click, scale=button_scale)
+options_button = Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20 + button_spacing, opt_btn, opt_click, scale=button_scale)
+
+# Exit button positioning variables
+exit_button_scale = 0.18  # Make exit button smaller than other buttons
+exit_padding_right = 70   # Padding from the right edge of the screen
+exit_padding_top = 42     # Padding from the top edge of the screen
+exit_button = Button(SCREEN_WIDTH - exit_padding_right, exit_padding_top, exit_btn, exit_click, scale=exit_button_scale)
 
 # Main game loop
 def main():
@@ -118,7 +149,14 @@ def main():
     clock = pygame.time.Clock()
     running = True
     
+    # Title expansion variables
+    title_scale = 1.0
+    title_hover = False
+    title_max_scale = 1.15  # Maximum scale when hovered
+    
     while running:
+        mouse_pos = pygame.mouse.get_pos()
+        
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -131,25 +169,53 @@ def main():
                     elif options_button.check_click(event.pos):
                         print("Options button clicked!")
                         # Add options menu logic here
+                    elif exit_button.check_click(event.pos):
+                        print("Exit button clicked!")
+                        running = False  # Exit the game
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:  # Left mouse button released
+                    play_button.release()
+                    options_button.release()
+                    exit_button.release()
         
-        # Update
-        play_button.update()
-        options_button.update()
+        # Check button hover states
+        play_button.check_hover(mouse_pos)
+        options_button.check_hover(mouse_pos)
+        exit_button.check_hover(mouse_pos)
         
         # Calculate title hover effect (moves up and down slightly)
         time = pygame.time.get_ticks() / 1000  # Convert to seconds
         title_y_offset = math.sin(time * 3) * 10  # Sine wave for smooth up/down motion
         
+        # Calculate title rect for hover detection
+        base_title_rect = title_img.get_rect(center=(SCREEN_WIDTH // 2, 150 + title_y_offset))
+        
+        # Check if mouse is hovering over title
+        if base_title_rect.collidepoint(mouse_pos):
+            title_hover = True
+            # Gradually increase scale up to max
+            title_scale = min(title_scale + 0.01, title_max_scale)
+        else:
+            title_hover = False
+            # Gradually decrease scale back to normal
+            title_scale = max(title_scale - 0.01, 1.0)
+        
+        # Scale the title image based on hover state
+        scaled_title_width = int(title_img.get_width() * title_scale)
+        scaled_title_height = int(title_img.get_height() * title_scale)
+        scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
+        title_rect = scaled_title.get_rect(center=(SCREEN_WIDTH // 2, 150 + title_y_offset))
+        
         # Draw
         screen.fill(BLACK)
         
         # Draw title with hover effect
-        title_rect = title_img.get_rect(center=(SCREEN_WIDTH // 2, 150 + title_y_offset))
-        screen.blit(title_img, title_rect)
+        screen.blit(scaled_title, title_rect)
         
         # Draw buttons
         play_button.draw(screen)
         options_button.draw(screen)
+        exit_button.draw(screen)
         
         # Update display
         pygame.display.flip()
