@@ -59,7 +59,7 @@ NAME_BOTTOM_PADDING = 30  # Padding from the bottom of the screen
 HOVER_DARKNESS = 50  # 0-255, higher is darker
 
 # Animation settings
-FPS = 120  # Frames per second
+FPS = 60  # Frames per second
 
 # Pixel animation settings
 PIXEL_MIN_SIZE = 2
