@@ -1,0 +1,10 @@
+---
+description: Always read and apply these project rules.
+globs: 
+alwaysApply: false
+---
+
+# PROJECT RULES
+
+When adding a visual element into the code always add all its modifiable visual settings to [settings.py](mdc:settings.py):
+For example when you add a button, include a scaling variable and distance from center (x and y) in [settings.py](mdc:settings.py). When these variables change, the display should change next time the script is ran.

@@ -2,31 +2,31 @@ import pygame
 import sys
 import os
 import math
+import settings  # Import settings
 
 # Initialize pygame
 pygame.init()
 
-# Screen dimensions
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 600
-
-# Colors
-BLACK = (0, 0, 0)
-
-# Create the screen
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Pixel Perfect")
-
-# Define assets directory
-assets_dir = "assets"
+# Create the screen based on settings
+if settings.BORDERLESS_WINDOW:
+    screen = pygame.display.set_mode(
+        (settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT),
+        pygame.NOFRAME  # Remove window frame/border including title bar
+    )
+else:
+    screen = pygame.display.set_mode(
+        (settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
+    )
+    
+pygame.display.set_caption("Pixel Perfect")  # Set caption for taskbar
 
 # Load assets
 def load_image(filename):
-    filepath = os.path.join(assets_dir, filename)
+    filepath = os.path.join(settings.ASSETS_DIR, filename)
     try:
         if not os.path.exists(filepath):
             print(f"Error: Image file '{filepath}' not found.")
-            print(f"Please ensure '{filename}' is in the '{assets_dir}' folder.")
+            print(f"Please ensure '{filename}' is in the '{settings.ASSETS_DIR}' folder.")
             sys.exit()
         
         image = pygame.image.load(filepath)
@@ -43,6 +43,8 @@ opt_btn = load_image("OptBtn.png")
 opt_click = load_image("OptClick.png")
 exit_btn = load_image("ExitBtn.png")
 exit_click = load_image("ExitClick.png")
+border_img = load_image("fullborder.png")
+name_img = load_image("name.png")  # Load the name image
 
 # Button class
 class Button:
@@ -71,7 +73,7 @@ class Button:
         # Create a darkened version of the normal image for hover state
         self.hover_img = self.normal_img.copy()
         dark_surface = pygame.Surface(self.hover_img.get_size(), pygame.SRCALPHA)
-        dark_surface.fill((0, 0, 0, 50))  # Semi-transparent black
+        dark_surface.fill((0, 0, 0, settings.HOVER_DARKNESS))  # Semi-transparent black
         self.hover_img.blit(dark_surface, (0, 0))
         
         self.image = self.normal_img
@@ -129,19 +131,56 @@ class Button:
             else:
                 self.image = self.normal_img
 
-# Create buttons with scaling (0.7 = 70% of original size)
-button_scale = 0.40
-# Center the buttons horizontally, position play button lower than the middle of the screen
-play_button = Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20, play_btn, play_click, scale=button_scale)
-# Position options button below the play button with proper spacing
-button_spacing = int(play_button.rect.height * 1.2)  # 20% spacing between buttons
-options_button = Button(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 20 + button_spacing, opt_btn, opt_click, scale=button_scale)
+# Create buttons using settings
+# Center the buttons horizontally, position play button relative to the middle of the screen
+play_button = Button(
+    settings.SCREEN_WIDTH // 2, 
+    settings.SCREEN_HEIGHT // 2 + settings.PLAY_BUTTON_Y_OFFSET, 
+    play_btn, 
+    play_click, 
+    scale=settings.PLAY_BUTTON_SCALE
+)
 
-# Exit button positioning variables
-exit_button_scale = 0.18  # Make exit button smaller than other buttons
-exit_padding_right = 70   # Padding from the right edge of the screen
-exit_padding_top = 42     # Padding from the top edge of the screen
-exit_button = Button(SCREEN_WIDTH - exit_padding_right, exit_padding_top, exit_btn, exit_click, scale=exit_button_scale)
+# Position options button below the play button with proper spacing
+button_spacing = int(play_button.rect.height * settings.BUTTON_SPACING_MULTIPLIER)
+options_button = Button(
+    settings.SCREEN_WIDTH // 2, 
+    settings.SCREEN_HEIGHT // 2 + settings.PLAY_BUTTON_Y_OFFSET + button_spacing, 
+    opt_btn, 
+    opt_click, 
+    scale=settings.OPTIONS_BUTTON_SCALE
+)
+
+# Exit button positioning using settings (now relative to center like play button)
+exit_button = Button(
+    settings.SCREEN_WIDTH // 2 + settings.EXIT_BUTTON_X_OFFSET, 
+    settings.SCREEN_HEIGHT // 2 + settings.EXIT_BUTTON_Y_OFFSET, 
+    exit_btn, 
+    exit_click, 
+    scale=settings.EXIT_BUTTON_SCALE
+)
+
+# Border scaling and positioning using settings
+original_border_size = border_img.get_size()
+scaled_border_size = (
+    int(original_border_size[0] * settings.BORDER_SCALE), 
+    int(original_border_size[1] * settings.BORDER_SCALE)
+)
+scaled_border_img = pygame.transform.scale(border_img, scaled_border_size)
+border_rect = scaled_border_img.get_rect(
+    center=(settings.SCREEN_WIDTH // 2, (settings.SCREEN_HEIGHT // 2) + settings.BORDER_Y_OFFSET)
+)
+
+# Name image scaling and positioning using settings
+original_name_size = name_img.get_size()
+scaled_name_size = (
+    int(original_name_size[0] * settings.NAME_SCALE), 
+    int(original_name_size[1] * settings.NAME_SCALE)
+)
+scaled_name_img = pygame.transform.scale(name_img, scaled_name_size)
+name_rect = scaled_name_img.get_rect(
+    midbottom=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT - settings.NAME_BOTTOM_PADDING)
+)
 
 # Main game loop
 def main():
@@ -150,9 +189,8 @@ def main():
     running = True
     
     # Title expansion variables
-    title_scale = 1.0
+    title_scale = settings.TITLE_SCALE
     title_hover = False
-    title_max_scale = 1.15  # Maximum scale when hovered
     
     while running:
         mouse_pos = pygame.mouse.get_pos()
@@ -185,29 +223,36 @@ def main():
         
         # Calculate title hover effect (moves up and down slightly)
         time = pygame.time.get_ticks() / 1000  # Convert to seconds
-        title_y_offset = math.sin(time * 3) * 10  # Sine wave for smooth up/down motion
+        title_y_offset = math.sin(time * settings.TITLE_HOVER_SPEED) * settings.TITLE_HOVER_AMPLITUDE
         
         # Calculate title rect for hover detection
-        base_title_rect = title_img.get_rect(center=(SCREEN_WIDTH // 2, 150 + title_y_offset))
+        base_title_rect = title_img.get_rect(
+            center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
+        )
         
         # Check if mouse is hovering over title
         if base_title_rect.collidepoint(mouse_pos):
             title_hover = True
             # Gradually increase scale up to max
-            title_scale = min(title_scale + 0.01, title_max_scale)
+            title_scale = min(title_scale + settings.TITLE_SCALE_SPEED, settings.TITLE_MAX_SCALE)
         else:
             title_hover = False
             # Gradually decrease scale back to normal
-            title_scale = max(title_scale - 0.01, 1.0)
+            title_scale = max(title_scale - settings.TITLE_SCALE_SPEED, settings.TITLE_SCALE)
         
         # Scale the title image based on hover state
         scaled_title_width = int(title_img.get_width() * title_scale)
         scaled_title_height = int(title_img.get_height() * title_scale)
         scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
-        title_rect = scaled_title.get_rect(center=(SCREEN_WIDTH // 2, 150 + title_y_offset))
+        title_rect = scaled_title.get_rect(
+            center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
+        )
         
         # Draw
-        screen.fill(BLACK)
+        screen.fill(settings.BLACK)
+        
+        # Draw border as background (first layer)
+        screen.blit(scaled_border_img, border_rect)
         
         # Draw title with hover effect
         screen.blit(scaled_title, title_rect)
@@ -217,9 +262,12 @@ def main():
         options_button.draw(screen)
         exit_button.draw(screen)
         
+        # Draw name image in foreground (last layer)
+        screen.blit(scaled_name_img, name_rect)
+        
         # Update display
         pygame.display.flip()
-        clock.tick(60)  # 60 FPS
+        clock.tick(settings.FPS)
     
     pygame.quit()
     sys.exit()
