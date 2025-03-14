@@ -66,8 +66,8 @@ PIXEL_MIN_SIZE = 2
 PIXEL_MAX_SIZE = 4
 PIXEL_MIN_COUNT = 5
 PIXEL_MAX_COUNT = 15
-PIXEL_MIN_INTERVAL = 2.0  # Minimum seconds between random animations
-PIXEL_MAX_INTERVAL = 6.0  # Maximum seconds between random animations
+PIXEL_MIN_INTERVAL = 1.0  # Minimum seconds between random animations
+PIXEL_MAX_INTERVAL = 5.0  # Maximum seconds between random animations
 PIXEL_CLICK_COUNT = 10    # Number of particles to spawn on click
 PIXEL_BUTTON_HOVER_COUNT = 5  # Number of particles to spawn when hovering over buttons
-PIXEL_GRAVITY = 1.5      # Gravity strength (0 = no gravity, higher values = stronger gravity)
+PIXEL_GRAVITY = 2.0      # Gravity strength (0 = no gravity, higher values = stronger gravity)
