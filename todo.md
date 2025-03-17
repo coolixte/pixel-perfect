@@ -14,4 +14,4 @@ PAGE PRINCIPALE
     | menu déroulant pour choisir l'image
     | btn pour charger une image depuis le pc
     | algo qui transforme une image classique en image pixel
-    | nombre de pixels limités
+    | nombre de pixels limité
