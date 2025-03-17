@@ -1,5 +1,6 @@
 
 MENU
+- revoir le style globale de l'app
 - sons (étape finale)
 
 
