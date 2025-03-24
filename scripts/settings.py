@@ -9,6 +9,7 @@ BORDERLESS_WINDOW = True  # Set to True for borderless window, False for normal 
 
 # Colors
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 # Assets directory
 ASSETS_DIR = "assets"
