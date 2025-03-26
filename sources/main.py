@@ -6,6 +6,7 @@ import settings  # Import settings
 from cursor_manager import CursorManager
 from pixel_animation import PixelAnimation  # Import our animation system
 from transition import TransitionAnimation  # Import our new transition animation system
+from screen_flash import ScreenFlash  # Import our screen flash animation system
 
 # Initialize pygame
 pygame.init()
@@ -204,6 +205,9 @@ def main():
     # Initialize transition animation system
     transition_animation = TransitionAnimation()
     
+    # Initialize screen flash animation system
+    screen_flash = ScreenFlash()
+    
     # State tracking
     in_transition = False
     next_scene = None
@@ -214,6 +218,9 @@ def main():
     
     # For calculating delta time
     last_time = pygame.time.get_ticks() / 1000.0
+    
+    # Start with an initial screen flash when the game loads
+    screen_flash.start()
     
     while running:
         # Calculate delta time
@@ -304,9 +311,11 @@ def main():
                 # Check if all elements have exited the screen
                 if transition_animation.all_elements_exited_screen():
                     waiting_for_elements_exit = True
+                    # Trigger the screen flash when elements have exited
+                    screen_flash.start()
                 
         # If waiting for elements to exit, handle scene change
-        if waiting_for_elements_exit:
+        if waiting_for_elements_exit and not screen_flash.active:
             waiting_for_elements_exit = False
             if next_scene == "play":
                 print("Transitioning to Play scene")
@@ -379,6 +388,9 @@ def main():
         # Update pixel animation
         pixel_animation.update(dt, settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
         
+        # Update screen flash animation
+        screen_flash.update(dt)
+        
         # Draw
         screen.fill(settings.BLACK)
         
@@ -407,6 +419,9 @@ def main():
         
         # Draw the custom cursor (should be last)
         cursor_manager.draw(screen)
+        
+        # Draw screen flash (should be the very last thing to draw)
+        screen_flash.draw(screen)
         
         # Update display
         pygame.display.flip()

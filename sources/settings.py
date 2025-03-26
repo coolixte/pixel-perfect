@@ -81,3 +81,7 @@ TRANSITION_MIN_SPEED = 100     # Minimum initial speed for transition elements (
 TRANSITION_MAX_SPEED = 250     # Maximum initial speed for transition elements (increased)
 TRANSITION_ROTATION_SPEED = 3.0  # Rotation speed factor for transition elements (increased)
 TRANSITION_DURATION = 3.0      # Maximum duration of transition animation in seconds (safety timeout)
+
+# Screen flash animation settings
+FLASH_DURATION = 2.5           # Duration of screen flash animation in seconds
+FLASH_FADE_SPEED = 2.5         # How quickly the flash fades out (higher = faster fade)
