@@ -1,67 +1,74 @@
-# Pixel Perfect Game
+# Pixel Perfect
 
-A pixel art game created with Pygame featuring a simple homepage with animated title and interactive buttons.
+Un jeu de réflexes au style pixel art où vous devez protéger votre cœur des pixels envahisseurs.
 
-## Features
+## Fonctionnalités
 
-- Animated title that hovers up and down
-- Interactive Play button with click animation
-- Interactive Options button with click animation
-- Clean pixel art aesthetic
+- Écran d'accueil animé avec titre flottant et boutons interactifs
+- Système de score et de meilleurs scores
+- Différents types de pixels avec des comportements uniques :
+  - **Pixels blancs** : Donnent 1 point lorsqu'ils sont détruits
+  - **Pixels orange** : Donnent 3 points et créent des pixels blancs supplémentaires
+  - **Pixels rouges** : Donnent 5 points mais provoquent un Game Over si cliqués
+  - **Pixels verts** : Activent des bonus aléatoires quand ils sont cliqués
+- Effets visuels de particules
+- Musique et effets sonores
+- Curseur personnalisé qui change selon le contexte
 
-## Requirements
+## Prérequis
 
-- Python 3.6 or higher
-- Pygame 2.0.0 or higher
+- Python 3.6 ou supérieur
+- Pygame 2.5.2 ou supérieur
 
 ## Installation
 
-1. Clone this repository or download the files
-2. Install the required dependencies:
+1. Clonez ce dépôt ou téléchargez les fichiers
+2. Installez les dépendances requises :
 
 ```
 pip install -r requirements.txt
 ```
 
-3. Create an "assets" folder in the project directory
-4. Place all image files in the assets folder:
-   - title.png
-   - PlayBtn.png
-   - PlayClick.png
-   - OptBtn.png
-   - OptClick.png
+3. Assurez-vous que le dossier "assets" contient toutes les ressources nécessaires
 
-## How to Run
+## Comment jouer
 
-Run the game by executing the main.py file:
+Lancez le jeu en exécutant le fichier main.py :
 
 ```
 python main.py
 ```
 
-## Assets Structure
+### Règles du jeu
 
-The game requires the following assets to be placed in the "assets" folder:
+- Vous commencez avec 5 vies représentées par un cœur
+- Des pixels apparaissent depuis les bords de l'écran et se dirigent vers le cœur
+- Cliquez sur les pixels pour les détruire avant qu'ils n'atteignent votre cœur
+- Chaque type de pixel a un comportement différent :
+  - **Pixels blancs** : Les plus communs, donnent 1 point par clic
+  - **Pixels orange** : Génèrent 2 pixels blancs quand ils sont détruits, 3 points par clic
+  - **Pixels rouges** : Dangereux ! Provoquent un Game Over immédiat si vous cliquez dessus, mais donnent 5 points s'ils touchent le cœur
+  - **Pixels verts** : Suppriment tout les pixels jaunes et blancs sur l'écran: ils sont rares alors cliquez au moment opportun!
+- Perdez une vie quand un pixel blanc ou orange touche votre cœur
+- Le jeu devient de plus en plus difficile avec le temps
+- Le jeu se termine quand vous perdez vos 5 vies
+
+### Contrôles
+
+- Utilisez la souris pour viser et cliquer sur les pixels 
+- Cliquez sur l'icône de sortie en bas de l'écran pour revenir au menu principal
+
+## Structure du projet
 
 ```
 pixel-perfect/
-├── assets/
-│   ├── title.png      - Game title
-│   ├── PlayBtn.png    - Play button (normal state)
-│   ├── PlayClick.png  - Play button (clicked state)
-│   ├── OptBtn.png     - Options button (normal state)
-│   └── OptClick.png   - Options button (clicked state)
-├── main.py
-├── requirements.txt
-└── README.md
+├── assets/              - Ressources graphiques et sonores
+├── sources/             - Code source Python
+│   ├── main.py          - Point d'entrée du jeu
+│   ├── game.py          - Logique principale du jeu
+│   ├── settings.py      - Paramètres configurables
+│   ├── cursor_manager.py - Gestion du curseur
+│   ├── pixel_animation.py - Animation des pixels
+│   └── transition.py    - Effets de transition
+├── highscore/           - Sauvegarde des meilleurs scores
 ```
-
-## Controls
-
-- Use the mouse to click on buttons
-- Click "Play" to start the game
-- Click "Options" to access game options
-
-## License
-
-This project is for educational purposes only. 
