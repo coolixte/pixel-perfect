@@ -4,7 +4,8 @@ import os
 import math
 import settings  # Import settings
 from cursor_manager import CursorManager
-from pixel_animation import PixelAnimation  # Import our new animation system
+from pixel_animation import PixelAnimation  # Import our animation system
+from transition import TransitionAnimation  # Import our new transition animation system
 
 # Initialize pygame
 pygame.init()
@@ -200,6 +201,14 @@ def main():
     # Initialize pixel animation system
     pixel_animation = PixelAnimation()
     
+    # Initialize transition animation system
+    transition_animation = TransitionAnimation()
+    
+    # State tracking
+    in_transition = False
+    next_scene = None
+    waiting_for_elements_exit = False
+    
     # Track if mouse is inside the window
     mouse_in_window = False
     
@@ -234,18 +243,49 @@ def main():
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button
-                    # Spawn particles at click position
-                    pixel_animation.spawn_particles(event.pos[0], event.pos[1])
-                    
-                    if play_button.check_click(event.pos):
-                        import s
-                        # Add game start logic here
-                    elif options_button.check_click(event.pos):
-                        print("Options button clicked!")
-                        # Add options menu logic here
-                    elif exit_button.check_click(event.pos):
-                        print("Exit button clicked!")
-                        running = False  # Exit the game
+                    # Only check button clicks if not in transition
+                    if not in_transition and not waiting_for_elements_exit:
+                        # Spawn particles at click position
+                        pixel_animation.spawn_particles(event.pos[0], event.pos[1])
+                        
+                        if play_button.check_click(event.pos):
+                            # Start transition animation
+                            ui_elements = [
+                                (scaled_title, title_rect),
+                                (play_button.image, play_button.rect),
+                                (options_button.image, options_button.rect),
+                                (exit_button.image, exit_button.rect),
+                                (scaled_name_img, name_rect)
+                            ]
+                            transition_animation.start(ui_elements, "play")
+                            in_transition = True
+                            next_scene = "play"
+                            
+                        elif options_button.check_click(event.pos):
+                            # Start transition animation
+                            ui_elements = [
+                                (scaled_title, title_rect),
+                                (play_button.image, play_button.rect),
+                                (options_button.image, options_button.rect),
+                                (exit_button.image, exit_button.rect),
+                                (scaled_name_img, name_rect)
+                            ]
+                            transition_animation.start(ui_elements, "options")
+                            in_transition = True
+                            next_scene = "options"
+                            
+                        elif exit_button.check_click(event.pos):
+                            # Start transition animation
+                            ui_elements = [
+                                (scaled_title, title_rect),
+                                (play_button.image, play_button.rect),
+                                (options_button.image, options_button.rect),
+                                (exit_button.image, exit_button.rect),
+                                (scaled_name_img, name_rect)
+                            ]
+                            transition_animation.start(ui_elements, "exit")
+                            in_transition = True
+                            next_scene = "exit"
             
             
             elif event.type == pygame.MOUSEBUTTONUP:
@@ -254,40 +294,71 @@ def main():
                     options_button.release()
                     exit_button.release()
         
-        # Check button hover states
-        play_button.check_hover(mouse_pos)
-        options_button.check_hover(mouse_pos)
-        exit_button.check_hover(mouse_pos)
+        # If in transition mode, update the transition animation
+        if in_transition:
+            still_active = transition_animation.update(dt)
+            
+            # If transition is no longer active
+            if not still_active:
+                in_transition = False
+                # Check if all elements have exited the screen
+                if transition_animation.all_elements_exited_screen():
+                    waiting_for_elements_exit = True
+                
+        # If waiting for elements to exit, handle scene change
+        if waiting_for_elements_exit:
+            waiting_for_elements_exit = False
+            if next_scene == "play":
+                print("Transitioning to Play scene")
+                # You would launch your game here
+                # import game
+                # game.start()
+            elif next_scene == "options":
+                print("Transitioning to Options scene")
+                # You would launch your options menu here
+                # import options
+                # options.start()
+            elif next_scene == "exit":
+                print("Exiting game")
+                running = False  # Exit the game
+            
+            next_scene = None
         
-        # Check button hover for pixel animations
-        pixel_animation.check_button_hover([play_button, options_button, exit_button])
-        
-        # Calculate title hover effect (moves up and down slightly)
-        time = pygame.time.get_ticks() / 1000  # Convert to seconds
-        title_y_offset = math.sin(time * settings.TITLE_HOVER_SPEED) * settings.TITLE_HOVER_AMPLITUDE
-        
-        # Calculate title rect for hover detection
-        base_title_rect = title_img.get_rect(
-            center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
-        )
-        
-        # Check if mouse is hovering over title
-        if base_title_rect.collidepoint(mouse_pos):
-            title_hover = True
-            # Gradually increase scale up to max
-            title_scale = min(title_scale + settings.TITLE_SCALE_SPEED, settings.TITLE_MAX_SCALE)
-        else:
-            title_hover = False
-            # Gradually decrease scale back to normal
-            title_scale = max(title_scale - settings.TITLE_SCALE_SPEED, settings.TITLE_SCALE)
-        
-        # Scale the title image based on hover state
-        scaled_title_width = int(title_img.get_width() * title_scale)
-        scaled_title_height = int(title_img.get_height() * title_scale)
-        scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
-        title_rect = scaled_title.get_rect(
-            center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
-        )
+        # Only check button hover states if not in transition
+        if not in_transition and not waiting_for_elements_exit:
+            play_button.check_hover(mouse_pos)
+            options_button.check_hover(mouse_pos)
+            exit_button.check_hover(mouse_pos)
+            
+            # Check button hover for pixel animations
+            pixel_animation.check_button_hover([play_button, options_button, exit_button])
+            
+            # Calculate title hover effect (moves up and down slightly)
+            time = pygame.time.get_ticks() / 1000  # Convert to seconds
+            title_y_offset = math.sin(time * settings.TITLE_HOVER_SPEED) * settings.TITLE_HOVER_AMPLITUDE
+            
+            # Calculate title rect for hover detection
+            base_title_rect = title_img.get_rect(
+                center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
+            )
+            
+            # Check if mouse is hovering over title
+            if base_title_rect.collidepoint(mouse_pos):
+                title_hover = True
+                # Gradually increase scale up to max
+                title_scale = min(title_scale + settings.TITLE_SCALE_SPEED, settings.TITLE_MAX_SCALE)
+            else:
+                title_hover = False
+                # Gradually decrease scale back to normal
+                title_scale = max(title_scale - settings.TITLE_SCALE_SPEED, settings.TITLE_SCALE)
+            
+            # Scale the title image based on hover state
+            scaled_title_width = int(title_img.get_width() * title_scale)
+            scaled_title_height = int(title_img.get_height() * title_scale)
+            scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
+            title_rect = scaled_title.get_rect(
+                center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
+            )
         
         # Check if mouse is hovering over any buttons (excluding title)
         hovering_button = (
@@ -314,16 +385,22 @@ def main():
         # Draw border as background (first layer)
         screen.blit(scaled_border_img, border_rect)
         
-        # Draw title with hover effect
-        screen.blit(scaled_title, title_rect)
-        
-        # Draw buttons
-        play_button.draw(screen)
-        options_button.draw(screen)
-        exit_button.draw(screen)
-        
-        # Draw name image in foreground (last layer)
-        screen.blit(scaled_name_img, name_rect)
+        # Draw UI elements or transition animation
+        if in_transition:
+            # If in transition, only draw the border and transition elements
+            transition_animation.draw(screen)
+        elif not waiting_for_elements_exit:
+            # Draw regular UI if not in transition
+            # Draw title with hover effect
+            screen.blit(scaled_title, title_rect)
+            
+            # Draw buttons
+            play_button.draw(screen)
+            options_button.draw(screen)
+            exit_button.draw(screen)
+            
+            # Draw name image in foreground (last layer)
+            screen.blit(scaled_name_img, name_rect)
         
         # Draw pixel animation (should be after UI elements but before cursor)
         pixel_animation.draw(screen)

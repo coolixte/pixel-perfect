@@ -72,3 +72,12 @@ PIXEL_MAX_INTERVAL = 5.0  # Maximum seconds between random animations
 PIXEL_CLICK_COUNT = 10    # Number of particles to spawn on click
 PIXEL_BUTTON_HOVER_COUNT = 5  # Number of particles to spawn when hovering over buttons
 PIXEL_GRAVITY = 2.0      # Gravity strength (0 = no gravity, higher values = stronger gravity)
+
+# Transition animation settings
+TRANSITION_GRAVITY = 8.0       # Gravity strength for transition animation (increased for faster falling)
+TRANSITION_MIN_ANGLE = -45     # Minimum angle in degrees for transition elements (wider angle range)
+TRANSITION_MAX_ANGLE = 45      # Maximum angle in degrees for transition elements (wider angle range)
+TRANSITION_MIN_SPEED = 100     # Minimum initial speed for transition elements (increased)
+TRANSITION_MAX_SPEED = 250     # Maximum initial speed for transition elements (increased)
+TRANSITION_ROTATION_SPEED = 3.0  # Rotation speed factor for transition elements (increased)
+TRANSITION_DURATION = 3.0      # Maximum duration of transition animation in seconds (safety timeout)
