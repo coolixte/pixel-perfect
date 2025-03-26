@@ -15,7 +15,9 @@ WHITE = (255, 255, 255)
 import os
 ASSETS_DIR = "../assets" if os.path.basename(os.getcwd()) == "sources" else "assets"
 
+# Position settings - all positions are now x,y offsets from origin (0,0)
 # Title settings
+TITLE_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
 TITLE_Y_POSITION = 140
 TITLE_HOVER_SPEED = 3  # Speed of the hover animation
 TITLE_HOVER_AMPLITUDE = 10  # How far the title moves up and down
@@ -24,12 +26,42 @@ TITLE_MAX_SCALE = 1.15  # Maximum scale when hovered
 TITLE_SCALE_SPEED = 0.01  # How fast the title scales up/down
 
 # Play button settings
+PLAY_BUTTON_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
+PLAY_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 - 20  # Slightly above center
 PLAY_BUTTON_SCALE = 0.40
-PLAY_BUTTON_Y_OFFSET = -20  # Offset from center of screen
 
 # Options button settings
+OPTIONS_BUTTON_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
+OPTIONS_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 + 90  # Below play button
 OPTIONS_BUTTON_SCALE = 0.40
 BUTTON_SPACING_MULTIPLIER = 1.2  # Spacing between buttons as a multiplier of button height
+
+# Exit button settings
+EXIT_BUTTON_X_POSITION = SCREEN_WIDTH // 2 - 3  # Slightly left of center
+EXIT_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 + 200  # Far below center
+EXIT_BUTTON_SCALE = 0.18
+
+# Border settings
+BORDER_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
+BORDER_Y_POSITION = SCREEN_HEIGHT // 2  # Centered vertically
+BORDER_SCALE = 2.9
+
+# Name image settings
+NAME_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
+NAME_Y_POSITION = SCREEN_HEIGHT - 30  # Bottom of the screen with padding
+NAME_SCALE = 0.5
+
+# Game exit button settings
+GAME_EXIT_ICON_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
+GAME_EXIT_ICON_Y_POSITION = SCREEN_HEIGHT - 30  # Bottom with padding
+GAME_EXIT_ICON_SCALE = 0.125
+
+# Heart settings
+HEART_X_POSITION = SCREEN_WIDTH // 2  # Center of screen horizontally
+HEART_Y_POSITION = SCREEN_HEIGHT // 2  # Center of screen vertically
+HEART_SCALE = 0.1  # Scale for heart image
+HEART_BASE_SCALE = 1.3  # Scale for the base under the heart
+INITIAL_LIVES = 5  # Player starts with 5 lives
 
 # Cursor settings
 CURSOR_NORMAL = "cursor_normal.png"
@@ -43,19 +75,6 @@ CURSOR_NORMAL_SCALE = 0.7
 CURSOR_HOVER_SCALE = 0.7
 CURSOR_CLICK_SCALE = 0.7
 CURSOR_ZOOM_SCALE = 0.7
-
-# Exit button settings
-EXIT_BUTTON_SCALE = 0.18
-EXIT_BUTTON_X_OFFSET = -3  # X offset from center of screen (positive = right)
-EXIT_BUTTON_Y_OFFSET = 200  # Y offset from center of screen (negative = up)
-
-# Border settings
-BORDER_SCALE = 2.9
-BORDER_Y_OFFSET = 0  # Vertical offset from center
-
-# Name image settings
-NAME_SCALE = 0.5
-NAME_BOTTOM_PADDING = 30  # Padding from the bottom of the screen
 
 # Button hover effect
 HOVER_DARKNESS = 50  # 0-255, higher is darker
@@ -87,18 +106,11 @@ TRANSITION_DURATION = 3.0      # Maximum duration of transition animation in sec
 FLASH_DURATION = 1          # Duration of screen flash animation in seconds
 FLASH_FADE_SPEED = 1.5
 
-# Game settings
-# Heart settings
-HEART_SCALE = 0.5
-HEART_WIDTH = 80  # Width of the heart in pixels
-HEART_HEIGHT = 80  # Height of the heart in pixels
-INITIAL_LIVES = 5  # Player starts with 5 lives
-
 # Game Pixel settings
-GAME_PIXEL_MIN_SIZE = 5   # Minimum size of game pixels
-GAME_PIXEL_MAX_SIZE = 15  # Maximum size of game pixels
-GAME_PIXEL_BASE_SPEED = 50  # Base speed of pixels
-GAME_PIXEL_ACCELERATION = 1.2  # How much pixels accelerate as they get closer to heart
+GAME_PIXEL_MIN_SIZE = 10   # Minimum size of game pixels
+GAME_PIXEL_MAX_SIZE = 35  # Maximum size of game pixels
+GAME_PIXEL_BASE_SPEED = 30  # Base speed of pixels
+GAME_PIXEL_ACCELERATION = 1.7  # How much pixels accelerate as they get closer to heart
 GAME_PIXEL_PROXIMITY_THRESHOLD = 200  # Distance at which pixels start accelerating
 
 # Spawn settings
@@ -115,7 +127,3 @@ ORANGE_PIXEL_ODDS = 20  # 20% chance for an orange pixel
 # Orange pixel settings
 ORANGE_SPLASH_RADIUS = 150  # Radius in which orange pixel spawns white pixels
 ORANGE_SPLASH_COUNT = 3  # Number of white pixels spawned by orange pixel
-
-# Game exit button settings
-GAME_EXIT_ICON_SCALE = 0.2  # Scale for the exit icon in game screen
-GAME_EXIT_ICON_PADDING = 20  # Padding from the top-right corner

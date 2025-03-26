@@ -136,30 +136,28 @@ class Button:
             else:
                 self.image = self.normal_img
 
-# Create buttons using settings
-# Center the buttons horizontally, position play button relative to the middle of the screen
+# Create buttons using settings - all positions are now absolute from origin (0,0)
 play_button = Button(
-    settings.SCREEN_WIDTH // 2, 
-    settings.SCREEN_HEIGHT // 2 + settings.PLAY_BUTTON_Y_OFFSET, 
+    settings.PLAY_BUTTON_X_POSITION, 
+    settings.PLAY_BUTTON_Y_POSITION, 
     play_btn, 
     play_click, 
     scale=settings.PLAY_BUTTON_SCALE
 )
 
-# Position options button below the play button with proper spacing
-button_spacing = int(play_button.rect.height * settings.BUTTON_SPACING_MULTIPLIER)
+# Options button with absolute positioning
 options_button = Button(
-    settings.SCREEN_WIDTH // 2, 
-    settings.SCREEN_HEIGHT // 2 + settings.PLAY_BUTTON_Y_OFFSET + button_spacing, 
+    settings.OPTIONS_BUTTON_X_POSITION, 
+    settings.OPTIONS_BUTTON_Y_POSITION, 
     opt_btn, 
     opt_click, 
     scale=settings.OPTIONS_BUTTON_SCALE
 )
 
-# Exit button positioning using settings (now relative to center like play button)
+# Exit button with absolute positioning
 exit_button = Button(
-    settings.SCREEN_WIDTH // 2 + settings.EXIT_BUTTON_X_OFFSET, 
-    settings.SCREEN_HEIGHT // 2 + settings.EXIT_BUTTON_Y_OFFSET, 
+    settings.EXIT_BUTTON_X_POSITION, 
+    settings.EXIT_BUTTON_Y_POSITION, 
     exit_btn, 
     exit_click, 
     scale=settings.EXIT_BUTTON_SCALE
@@ -173,7 +171,7 @@ scaled_border_size = (
 )
 scaled_border_img = pygame.transform.scale(border_img, scaled_border_size)
 border_rect = scaled_border_img.get_rect(
-    center=(settings.SCREEN_WIDTH // 2, (settings.SCREEN_HEIGHT // 2) + settings.BORDER_Y_OFFSET)
+    center=(settings.BORDER_X_POSITION, settings.BORDER_Y_POSITION)
 )
 
 # Name image scaling and positioning using settings
@@ -184,7 +182,7 @@ scaled_name_size = (
 )
 scaled_name_img = pygame.transform.scale(name_img, scaled_name_size)
 name_rect = scaled_name_img.get_rect(
-    midbottom=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT - settings.NAME_BOTTOM_PADDING)
+    midbottom=(settings.NAME_X_POSITION, settings.NAME_Y_POSITION)
 )
 
 # Main game loop
@@ -355,7 +353,7 @@ def main():
             
             # Calculate title rect for hover detection
             base_title_rect = title_img.get_rect(
-                center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
+                center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION + title_y_offset)
             )
             
             # Check if mouse is hovering over title
@@ -373,7 +371,7 @@ def main():
             scaled_title_height = int(title_img.get_height() * title_scale)
             scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
             title_rect = scaled_title.get_rect(
-                center=(settings.SCREEN_WIDTH // 2, settings.TITLE_Y_POSITION + title_y_offset)
+                center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION + title_y_offset)
             )
         
         # Check if mouse is hovering over any buttons (excluding title)

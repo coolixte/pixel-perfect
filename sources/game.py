@@ -24,7 +24,7 @@ class GamePixel:
         self.x = x
         self.y = y
         self.angle = angle
-        self.size = size
+        self.size = size  # Size is now just used for scaling
         self.type = pixel_type
         self.speed = settings.GAME_PIXEL_BASE_SPEED
         self.dead = False
@@ -49,7 +49,9 @@ class GamePixel:
             if not os.path.exists(filepath):
                 print(f"Error: Pixel image '{filepath}' not found.")
                 # Create a fallback colored square
-                self.image = pygame.Surface((self.size, self.size))
+                base_size = 10  # Base size before applying the scaling factor
+                scaled_size = int(base_size * (self.size / 10.0))  # Scale relative to base size
+                self.image = pygame.Surface((scaled_size, scaled_size))
                 if self.type == "white":
                     self.image.fill((255, 255, 255))
                 elif self.type == "red":
@@ -60,12 +62,19 @@ class GamePixel:
                     self.image.fill((255, 165, 0))
             else:
                 self.image = pygame.image.load(filepath)
-                # Scale the image to the pixel size
-                self.image = pygame.transform.scale(self.image, (self.size, self.size))
+                # Get original size of the image
+                original_size = self.image.get_size()
+                # Calculate scale factor based on requested size
+                scale_factor = self.size / max(original_size)
+                # Scale the image
+                scaled_size = (int(original_size[0] * scale_factor), int(original_size[1] * scale_factor))
+                self.image = pygame.transform.scale(self.image, scaled_size)
         except pygame.error as e:
             print(f"Error loading pixel image {filename}: {e}")
-            # Create a fallback colored square
-            self.image = pygame.Surface((self.size, self.size))
+            # Create a fallback colored square with consistent sizing
+            base_size = 10  # Base size before applying the scaling factor
+            scaled_size = int(base_size * (self.size / 10.0))  # Scale relative to base size
+            self.image = pygame.Surface((scaled_size, scaled_size))
             if self.type == "white":
                 self.image.fill((255, 255, 255))
             elif self.type == "red":
@@ -198,10 +207,9 @@ class Game:
             self.exit_normal = pygame.transform.scale(self.exit_normal, new_size)
             self.exit_click = pygame.transform.scale(self.exit_click, new_size)
             
-            # Position the button in the top-right corner using settings
+            # Position the button using the absolute position settings
             self.exit_rect = self.exit_normal.get_rect(
-                topright=(settings.SCREEN_WIDTH - settings.GAME_EXIT_ICON_PADDING, 
-                          settings.GAME_EXIT_ICON_PADDING)
+                midbottom=(settings.GAME_EXIT_ICON_X_POSITION, settings.GAME_EXIT_ICON_Y_POSITION)
             )
             self.exit_image = self.exit_normal
             self.exit_clicked = False
@@ -220,11 +228,24 @@ class Game:
             )
             self.scaled_border_img = pygame.transform.scale(self.border_img, scaled_border_size)
             self.border_rect = self.scaled_border_img.get_rect(
-                center=(settings.SCREEN_WIDTH // 2, (settings.SCREEN_HEIGHT // 2) + settings.BORDER_Y_OFFSET)
+                center=(settings.BORDER_X_POSITION, settings.BORDER_Y_POSITION)
             )
         except pygame.error as e:
             print(f"Error loading border image: {e}")
             self.scaled_border_img = None
+        
+        # Load heart base image
+        try:
+            self.base_img = pygame.image.load(os.path.join(settings.ASSETS_DIR, "base.png"))
+            original_base_size = self.base_img.get_size()
+            scaled_base_size = (
+                int(original_base_size[0] * settings.HEART_BASE_SCALE), 
+                int(original_base_size[1] * settings.HEART_BASE_SCALE)
+            )
+            self.scaled_base_img = pygame.transform.scale(self.base_img, scaled_base_size)
+        except pygame.error as e:
+            print(f"Error loading base image: {e}")
+            self.scaled_base_img = None
         
         # Load heart images
         self.heart_images = []
@@ -232,8 +253,12 @@ class Game:
             filename = f"heart_{i}.png"
             try:
                 image = pygame.image.load(os.path.join(settings.ASSETS_DIR, filename))
-                # Using explicit heart size settings instead of just scaling
-                scaled_size = (settings.HEART_WIDTH, settings.HEART_HEIGHT)
+                # Scale the image using the HEART_SCALE setting
+                original_size = image.get_size()
+                scaled_size = (
+                    int(original_size[0] * settings.HEART_SCALE),
+                    int(original_size[1] * settings.HEART_SCALE)
+                )
                 self.heart_images.append(pygame.transform.scale(image, scaled_size))
             except pygame.error as e:
                 print(f"Error loading heart image {filename}: {e}")
@@ -241,15 +266,22 @@ class Game:
                 if i > 1 and len(self.heart_images) > 0:
                     self.heart_images.append(self.heart_images[-1])
                 else:
-                    # Create a placeholder heart
-                    placeholder = pygame.Surface((settings.HEART_WIDTH, settings.HEART_HEIGHT))
+                    # Create a placeholder heart (scaled appropriately)
+                    placeholder_size = 100  # Base size before scaling
+                    placeholder = pygame.Surface((placeholder_size, placeholder_size))
                     placeholder.fill((255, 0, 0))  # Red square as placeholder
-                    self.heart_images.append(placeholder)
+                    scaled_size = (
+                        int(placeholder_size * settings.HEART_SCALE),
+                        int(placeholder_size * settings.HEART_SCALE)
+                    )
+                    self.heart_images.append(pygame.transform.scale(placeholder, scaled_size))
             
         # Set up heart
         self.lives = settings.INITIAL_LIVES
         self.heart_image = self.heart_images[0]  # Start with the first heart image
-        self.heart_rect = self.heart_image.get_rect(center=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT // 2))
+        self.heart_rect = self.heart_image.get_rect(
+            center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
+        )
         
         # Set up game pixels
         self.pixels = []
@@ -472,6 +504,13 @@ class Game:
         # Collect all visible elements for the transition
         self.exit_elements = []
         
+        # Add base (if it exists)
+        if hasattr(self, 'scaled_base_img') and self.scaled_base_img is not None:
+            base_rect = self.scaled_base_img.get_rect(
+                center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
+            )
+            self.exit_elements.append((self.scaled_base_img, base_rect))
+        
         # Add heart
         if hasattr(self, 'heart_image') and self.heart_image:
             self.exit_elements.append((self.heart_image, self.heart_rect))
@@ -572,8 +611,8 @@ class Game:
             self.last_spawn_time = 0
             
         # Update all pixels
-        heart_x = self.heart_rect.centerx
-        heart_y = self.heart_rect.centery
+        heart_x = settings.HEART_X_POSITION
+        heart_y = settings.HEART_Y_POSITION
         
         pixels_to_remove = []
         for i, pixel in enumerate(self.pixels):
@@ -581,8 +620,17 @@ class Game:
                 pixels_to_remove.append(i)
                 continue
                 
-            # Check for collision with heart
-            if pixel.check_collision(self.heart_rect):
+            # Define base rect for collision detection
+            if hasattr(self, 'scaled_base_img') and self.scaled_base_img is not None:
+                base_rect = self.scaled_base_img.get_rect(
+                    center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
+                )
+                collision_rect = base_rect
+            else:
+                collision_rect = self.heart_rect
+            
+            # Check for collision with heart/base
+            if pixel.check_collision(collision_rect):
                 pixels_to_remove.append(i)
                 
                 if pixel.type == "white" or pixel.type == "orange":
@@ -637,8 +685,15 @@ class Game:
         # Draw all pixels
         for pixel in self.pixels:
             pixel.draw(self.screen)
-            
-        # Draw the heart
+        
+        # First draw the base image under the heart
+        if hasattr(self, 'scaled_base_img') and self.scaled_base_img is not None:
+            base_rect = self.scaled_base_img.get_rect(
+                center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
+            )
+            self.screen.blit(self.scaled_base_img, base_rect)
+        
+        # Then draw the heart on top of the base
         self.screen.blit(self.heart_image, self.heart_rect)
         
         # Draw exit button
@@ -699,6 +754,7 @@ def start(screen, skip_entry_flash=False):
     Returns:
         bool: True if game should return to menu, False if should exit
     """
+    # Always create a new Game instance to ensure fresh settings
     game = Game(screen, skip_entry_flash)
     result = game.run()
     
