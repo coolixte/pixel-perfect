@@ -222,19 +222,23 @@ def main():
                 # Check if mouse is inside the window
                 x, y = event.pos
                 mouse_in_window = (0 <= x < settings.SCREEN_WIDTH and 0 <= y < settings.SCREEN_HEIGHT)
+            
+            
             elif event.type == pygame.ACTIVEEVENT:
                 # Handle window focus/unfocus events
                 if event.gain == 0 and event.state == 1:  # Mouse left the window
                     mouse_in_window = False
                 elif event.gain == 1 and event.state == 1:  # Mouse entered the window
                     mouse_in_window = True
+            
+            
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button
                     # Spawn particles at click position
                     pixel_animation.spawn_particles(event.pos[0], event.pos[1])
                     
                     if play_button.check_click(event.pos):
-                        print("Play button clicked!")
+                        import s
                         # Add game start logic here
                     elif options_button.check_click(event.pos):
                         print("Options button clicked!")
@@ -242,6 +246,8 @@ def main():
                     elif exit_button.check_click(event.pos):
                         print("Exit button clicked!")
                         running = False  # Exit the game
+            
+            
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:  # Left mouse button released
                     play_button.release()
