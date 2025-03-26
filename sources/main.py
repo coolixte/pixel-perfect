@@ -7,6 +7,7 @@ from cursor_manager import CursorManager
 from pixel_animation import PixelAnimation  # Import our animation system
 from transition import TransitionAnimation  # Import our new transition animation system
 from screen_flash import ScreenFlash  # Import our screen flash animation system
+import game  # Import our game module
 
 # Initialize pygame
 pygame.init()
@@ -319,9 +320,15 @@ def main():
             waiting_for_elements_exit = False
             if next_scene == "play":
                 print("Transitioning to Play scene")
-                # You would launch your game here
-                # import game
-                # game.start()
+                # Launch the game - we want game elements to appear after the white flash
+                game_result = game.start(screen)
+                if not game_result:
+                    running = False  # Exit the game if game returns False
+                else:
+                    # Game returned to menu - just reset menu state
+                    # Don't do any extra transitions here since the game handles its own exit animation
+                    # The game exit animation is already showing the white flash
+                    title_scale = settings.TITLE_SCALE
             elif next_scene == "options":
                 print("Transitioning to Options scene")
                 # You would launch your options menu here

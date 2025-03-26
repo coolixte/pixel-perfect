@@ -69,8 +69,13 @@ class PixelParticle:
 
 class PixelAnimation:
     """Manages multiple pixel particles for animations."""
-    def __init__(self):
-        """Initialize the pixel animation system."""
+    def __init__(self, auto_spawn=True):
+        """
+        Initialize the pixel animation system.
+        
+        Args:
+            auto_spawn (bool): Whether to automatically spawn particles at random intervals
+        """
         self.particles = []
         self.last_random_spawn = 0
         self.random_spawn_interval = random.uniform(
@@ -78,6 +83,7 @@ class PixelAnimation:
             settings.PIXEL_MAX_INTERVAL
         )
         self.button_hover_states = {}  # Track button hover states
+        self.auto_spawn = auto_spawn  # Whether to spawn particles automatically
         
     def spawn_particles(self, x, y, count=None):
         """
@@ -194,16 +200,18 @@ class PixelAnimation:
         # Update existing particles and remove those that fall off the screen
         self.particles = [p for p in self.particles if p.update(dt, screen_height)]
         
-        # Check if it's time for a random spawn
-        self.last_random_spawn += dt
-        if self.last_random_spawn >= self.random_spawn_interval:
-            self.spawn_random_particles(screen_width, screen_height)
-            self.last_random_spawn = 0
-            # Set a new random interval
-            self.random_spawn_interval = random.uniform(
-                settings.PIXEL_MIN_INTERVAL, 
-                settings.PIXEL_MAX_INTERVAL
-            )
+        # Check if auto-spawning is enabled
+        if self.auto_spawn:
+            # Check if it's time for a random spawn
+            self.last_random_spawn += dt
+            if self.last_random_spawn >= self.random_spawn_interval:
+                self.spawn_random_particles(screen_width, screen_height)
+                self.last_random_spawn = 0
+                # Set a new random interval
+                self.random_spawn_interval = random.uniform(
+                    settings.PIXEL_MIN_INTERVAL, 
+                    settings.PIXEL_MAX_INTERVAL
+                )
     
     def draw(self, surface):
         """

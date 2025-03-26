@@ -11,8 +11,9 @@ BORDERLESS_WINDOW = True  # Set to True for borderless window, False for normal 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Assets directory
-ASSETS_DIR = "assets"
+# Assets directory (supports running from both root and sources directory)
+import os
+ASSETS_DIR = "../assets" if os.path.basename(os.getcwd()) == "sources" else "assets"
 
 # Title settings
 TITLE_Y_POSITION = 140
@@ -69,7 +70,7 @@ PIXEL_MIN_COUNT = 5
 PIXEL_MAX_COUNT = 15
 PIXEL_MIN_INTERVAL = 1.0  # Minimum seconds between random animations
 PIXEL_MAX_INTERVAL = 5.0  # Maximum seconds between random animations
-PIXEL_CLICK_COUNT = 10    # Number of particles to spawn on click
+PIXEL_CLICK_COUNT = 10
 PIXEL_BUTTON_HOVER_COUNT = 5  # Number of particles to spawn when hovering over buttons
 PIXEL_GRAVITY = 2.0      # Gravity strength (0 = no gravity, higher values = stronger gravity)
 
@@ -83,5 +84,38 @@ TRANSITION_ROTATION_SPEED = 3.0  # Rotation speed factor for transition elements
 TRANSITION_DURATION = 3.0      # Maximum duration of transition animation in seconds (safety timeout)
 
 # Screen flash animation settings
-FLASH_DURATION = 2.5           # Duration of screen flash animation in seconds
-FLASH_FADE_SPEED = 2.5         # How quickly the flash fades out (higher = faster fade)
+FLASH_DURATION = 1          # Duration of screen flash animation in seconds
+FLASH_FADE_SPEED = 1.5
+
+# Game settings
+# Heart settings
+HEART_SCALE = 0.5
+HEART_WIDTH = 80  # Width of the heart in pixels
+HEART_HEIGHT = 80  # Height of the heart in pixels
+INITIAL_LIVES = 5  # Player starts with 5 lives
+
+# Game Pixel settings
+GAME_PIXEL_MIN_SIZE = 5   # Minimum size of game pixels
+GAME_PIXEL_MAX_SIZE = 15  # Maximum size of game pixels
+GAME_PIXEL_BASE_SPEED = 50  # Base speed of pixels
+GAME_PIXEL_ACCELERATION = 1.2  # How much pixels accelerate as they get closer to heart
+GAME_PIXEL_PROXIMITY_THRESHOLD = 200  # Distance at which pixels start accelerating
+
+# Spawn settings
+GAME_PIXEL_SPAWN_INTERVAL = 2.0  # Initial seconds between spawns
+GAME_PIXEL_SPAWN_DECREASE_RATE = 0.05  # How much spawn interval decreases per second
+GAME_PIXEL_SPAWN_MIN_INTERVAL = 0.5  # Minimum spawn interval
+GAME_PIXEL_SPEED_INCREASE_RATE = 0.5  # How much base speed increases per second
+
+# Special pixel spawn odds (percentage)
+RED_PIXEL_ODDS = 10  # 10% chance for a red pixel
+GREEN_PIXEL_ODDS = 15  # 15% chance for a green pixel
+ORANGE_PIXEL_ODDS = 20  # 20% chance for an orange pixel
+
+# Orange pixel settings
+ORANGE_SPLASH_RADIUS = 150  # Radius in which orange pixel spawns white pixels
+ORANGE_SPLASH_COUNT = 3  # Number of white pixels spawned by orange pixel
+
+# Game exit button settings
+GAME_EXIT_ICON_SCALE = 0.2  # Scale for the exit icon in game screen
+GAME_EXIT_ICON_PADDING = 20  # Padding from the top-right corner
