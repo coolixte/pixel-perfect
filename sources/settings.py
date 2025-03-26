@@ -109,20 +109,20 @@ FLASH_FADE_SPEED = 1.5
 # Game Pixel settings
 GAME_PIXEL_MIN_SIZE = 10   # Minimum size of game pixels
 GAME_PIXEL_MAX_SIZE = 35  # Maximum size of game pixels
-GAME_PIXEL_BASE_SPEED = 30  # Base speed of pixels
-GAME_PIXEL_ACCELERATION = 1.7  # How much pixels accelerate as they get closer to heart
-GAME_PIXEL_PROXIMITY_THRESHOLD = 200  # Distance at which pixels start accelerating
+GAME_PIXEL_BASE_SPEED = 15  # Base speed of pixels
+GAME_PIXEL_ACCELERATION = 3.0  # Exponential acceleration factor (increased for more dramatic effect)
+GAME_PIXEL_PROXIMITY_THRESHOLD = 400  # Distance at which pixels start accelerating
 
 # Spawn settings
-GAME_PIXEL_SPAWN_INTERVAL = 2.0  # Initial seconds between spawns
-GAME_PIXEL_SPAWN_DECREASE_RATE = 0.05  # How much spawn interval decreases per second
+GAME_PIXEL_SPAWN_INTERVAL = 3.0  # Initial seconds between spawns
+GAME_PIXEL_SPAWN_DECREASE_RATE = 0.015  # How much spawn interval decreases per second
 GAME_PIXEL_SPAWN_MIN_INTERVAL = 0.5  # Minimum spawn interval
-GAME_PIXEL_SPEED_INCREASE_RATE = 0.5  # How much base speed increases per second
+GAME_PIXEL_SPEED_INCREASE_RATE = 0.025  # How much base speed increases per second
 
 # Special pixel spawn odds (percentage)
 RED_PIXEL_ODDS = 10  # 10% chance for a red pixel
-GREEN_PIXEL_ODDS = 15  # 15% chance for a green pixel
-ORANGE_PIXEL_ODDS = 20  # 20% chance for an orange pixel
+GREEN_PIXEL_ODDS = 2.5  # 15% chance for a green pixel
+ORANGE_PIXEL_ODDS = 10  # 20% chance for an orange pixel
 
 # Orange pixel settings
 ORANGE_SPLASH_RADIUS = 150  # Radius in which orange pixel spawns white pixels

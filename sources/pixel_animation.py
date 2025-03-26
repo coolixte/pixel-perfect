@@ -5,25 +5,29 @@ import settings
 
 class PixelParticle:
     """Represents a single pixel particle in the animation."""
-    def __init__(self, x, y, velocity_x, velocity_y, size=3, color=(255, 255, 255)):
+    def __init__(self, x, y, angle, speed, size=3, color=(255, 255, 255)):
         """
         Initialize a pixel particle.
         
         Args:
             x (float): Initial x position
             y (float): Initial y position
-            velocity_x (float): Initial x velocity
-            velocity_y (float): Initial y velocity
+            angle (float): Initial movement angle
+            speed (float): Initial speed
             size (int): Size of the pixel in pixels
             color (tuple): RGB color tuple
         """
         self.x = x
         self.y = y
-        self.velocity_x = velocity_x
-        self.velocity_y = velocity_y
+        self.angle = angle
+        self.speed = speed
+        self.velocity_x = math.cos(angle) * speed
+        self.velocity_y = math.sin(angle) * speed
         self.size = size
         self.color = color
-        # No longer using lifetime or alpha for fading
+        self.gravity = random.uniform(0.5, 1.5) * settings.PIXEL_GRAVITY
+        self.life = 1.0  # Full life
+        self.fade_speed = random.uniform(0.5, 1.5)  # Random fade speed
         
     def update(self, dt, screen_height):
         """
@@ -40,14 +44,17 @@ class PixelParticle:
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
         
-        # Apply gravity from settings
-        self.velocity_y += settings.PIXEL_GRAVITY * dt * 60  # Scale by dt and target 60fps
+        # Apply gravity
+        self.velocity_y += self.gravity * dt * 60  # Scale by dt and target 60fps
         
         # Add slight drag/air resistance
         self.velocity_x *= 0.99
         
-        # Check if particle has fallen off the bottom of the screen
-        if self.y > screen_height:
+        # Update life (fade)
+        self.life -= self.fade_speed * dt
+        
+        # Check if particle has fallen off the bottom of the screen or faded out
+        if self.y > screen_height or self.life <= 0:
             return False
             
         return True
@@ -59,12 +66,22 @@ class PixelParticle:
         Args:
             surface (Surface): Pygame surface to draw on
         """
-        # Draw a fully opaque pixel
-        pygame.draw.rect(
-            surface, 
-            self.color, 
-            pygame.Rect(int(self.x), int(self.y), self.size, self.size)
-        )
+        # Calculate alpha based on life
+        alpha = int(255 * self.life)
+        
+        # Only draw if still visible
+        if alpha > 0:
+            # Create a surface for the particle with alpha channel
+            particle_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+            
+            # Get the color with alpha
+            color_with_alpha = (*self.color, alpha)
+            
+            # Fill with the color
+            particle_surface.fill(color_with_alpha)
+            
+            # Draw the particle
+            surface.blit(particle_surface, (self.x - self.size // 2, self.y - self.size // 2))
 
 
 class PixelAnimation:
@@ -85,33 +102,59 @@ class PixelAnimation:
         self.button_hover_states = {}  # Track button hover states
         self.auto_spawn = auto_spawn  # Whether to spawn particles automatically
         
-    def spawn_particles(self, x, y, count=None):
+        # Create particle colors dictionary
+        self.particle_colors = {
+            "white": (255, 255, 255),
+            "red": (255, 0, 0),
+            "green": (0, 255, 0),
+            "orange": (255, 165, 0)
+        }
+        
+    def spawn_particles(self, x, y, count=None, color="white"):
         """
-        Spawn a group of particles at the given position.
+        Spawn a group of particles at the given position with color-specific behaviors.
         
         Args:
             x (int): X-coordinate to spawn particles
             y (int): Y-coordinate to spawn particles
             count (int, optional): Number of particles to spawn. If None, uses PIXEL_CLICK_COUNT.
+            color (str, optional): Color of the particles. Default is "white".
         """
         if count is None:
             count = settings.PIXEL_CLICK_COUNT
             
+        # Get color from dictionary or use white as default
+        particle_color = self.particle_colors.get(color, (255, 255, 255))
+        
         for _ in range(count):
-            # Random initial velocity in all directions
+            # Base parameters that will be modified based on color
             angle = random.uniform(0, 2 * math.pi)
-            speed = random.uniform(100, 200)
-            velocity_x = math.cos(angle) * speed
-            velocity_y = math.sin(angle) * speed
-            
-            # Random size variation
+            speed = random.uniform(50, 150)
             size = random.randint(settings.PIXEL_MIN_SIZE, settings.PIXEL_MAX_SIZE)
+            gravity = random.uniform(0.5, 1.5) * settings.PIXEL_GRAVITY
+            fade_speed = random.uniform(0.5, 1.5)
             
-            # Pure white pixels
-            color = (255, 255, 255)
-            
-            # Create and add the particle
-            particle = PixelParticle(x, y, velocity_x, velocity_y, size, color)
+            # Customize behavior based on color
+            if color == "red":
+                # Red particles: faster, larger, quick fade
+                speed *= 1.5
+                size *= 1.5
+                fade_speed *= 2.0
+                
+            elif color == "green":
+                # Green particles: float upward (negative gravity), slower fade
+                gravity *= -0.5  # Float upward
+                fade_speed *= 0.7  # Slower fade
+                
+            elif color == "orange":
+                # Orange particles: outward explosion, higher particle count
+                speed *= 1.3
+                # No need to adjust count here as it's handled by ORANGE_SPLASH settings
+                
+            # Create particle with color-specific behaviors
+            particle = PixelParticle(x, y, angle, speed, size, particle_color)
+            particle.gravity = gravity
+            particle.fade_speed = fade_speed
             self.particles.append(particle)
     
     def spawn_button_hover_particles(self, button):
@@ -145,13 +188,10 @@ class PixelAnimation:
             # Create particles with slightly different parameters for button hover
             angle = random.uniform(0, 2 * math.pi)
             speed = random.uniform(50, 150)  # Slightly slower than click particles
-            velocity_x = math.cos(angle) * speed
-            velocity_y = math.sin(angle) * speed
-            
             size = random.randint(settings.PIXEL_MIN_SIZE, settings.PIXEL_MAX_SIZE)
-            color = (255, 255, 255)
+            color = (255, 255, 255)  # White for button hover
             
-            particle = PixelParticle(x, y, velocity_x, velocity_y, size, color)
+            particle = PixelParticle(x, y, angle, speed, size, color)
             self.particles.append(particle)
     
     def check_button_hover(self, buttons):
@@ -160,16 +200,24 @@ class PixelAnimation:
         
         Args:
             buttons (list): List of button objects to check
+            
+        Returns:
+            bool: True if particles were spawned, False otherwise
         """
+        particles_spawned = False
+        
         for button in buttons:
             button_id = id(button)  # Use object ID as unique identifier
             
             # If button is hovered now but wasn't before, spawn particles
             if button.hovered and not self.button_hover_states.get(button_id, False):
                 self.spawn_button_hover_particles(button)
+                particles_spawned = True
             
             # Update hover state
             self.button_hover_states[button_id] = button.hovered
+            
+        return particles_spawned
     
     def spawn_random_particles(self, screen_width, screen_height):
         """

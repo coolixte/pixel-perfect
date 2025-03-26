@@ -11,6 +11,7 @@ import game  # Import our game module
 
 # Initialize pygame
 pygame.init()
+pygame.mixer.init()  # Initialize the mixer for audio playback
 
 # Create the screen based on settings
 if settings.BORDERLESS_WINDOW:
@@ -191,6 +192,32 @@ def main():
     clock = pygame.time.Clock()
     running = True
     
+    # Initialize background music
+    try:
+        # Load and play background music
+        bg_music_path = os.path.join(settings.ASSETS_DIR, "pixel-song.mp3")
+        if os.path.exists(bg_music_path):
+            pygame.mixer.music.load(bg_music_path)
+            pygame.mixer.music.set_volume(0.5)  # Set volume to 50%
+            pygame.mixer.music.play(-1)  # -1 means loop indefinitely
+        else:
+            print(f"Warning: Background music file '{bg_music_path}' not found.")
+    except pygame.error as e:
+        print(f"Error loading background music: {e}")
+    
+    # Load sound effects for the main menu
+    try:
+        explode_sound_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
+        if os.path.exists(explode_sound_path):
+            explode_sound = pygame.mixer.Sound(explode_sound_path)
+            explode_sound.set_volume(0.4)
+        else:
+            print(f"Warning: Sound file '{explode_sound_path}' not found.")
+            explode_sound = None
+    except pygame.error as e:
+        print(f"Error loading explode sound: {e}")
+        explode_sound = None
+
     # Title expansion variables
     title_scale = settings.TITLE_SCALE
     title_hover = False
@@ -217,6 +244,12 @@ def main():
     
     # For calculating delta time
     last_time = pygame.time.get_ticks() / 1000.0
+    
+    # Initialize scaled_title and title_rect to ensure they're defined before event handling
+    scaled_title_width = int(title_img.get_width() * title_scale)
+    scaled_title_height = int(title_img.get_height() * title_scale)
+    scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
+    title_rect = scaled_title.get_rect(center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION))
     
     # Start with an initial screen flash when the game loads
     screen_flash.start()
@@ -251,6 +284,10 @@ def main():
                 if event.button == 1:  # Left mouse button
                     # Only check button clicks if not in transition
                     if not in_transition and not waiting_for_elements_exit:
+                        # Play click sound
+                        if explode_sound:
+                            explode_sound.play()
+                        
                         # Spawn particles at click position
                         pixel_animation.spawn_particles(event.pos[0], event.pos[1])
                         
@@ -267,6 +304,9 @@ def main():
                             in_transition = True
                             next_scene = "play"
                             
+                            # Fade out music before transitioning to game
+                            pygame.mixer.music.fadeout(500)  # Fade out over 500ms
+                        
                         elif options_button.check_click(event.pos):
                             # Start transition animation
                             ui_elements = [
@@ -323,6 +363,13 @@ def main():
                             # Game returned to menu - reset menu state
                             title_scale = settings.TITLE_SCALE
                             
+                            # Restart music when returning from game
+                            try:
+                                pygame.mixer.music.rewind()
+                                pygame.mixer.music.play(-1)
+                            except pygame.error as e:
+                                print(f"Error restarting music: {e}")
+                        
                     elif next_scene == "options":
                         print("Transitioning to Options scene")
                         in_transition = False
@@ -345,7 +392,9 @@ def main():
             exit_button.check_hover(mouse_pos)
             
             # Check button hover for pixel animations
-            pixel_animation.check_button_hover([play_button, options_button, exit_button])
+            if pixel_animation.check_button_hover([play_button, options_button, exit_button]):
+                # Don't play sound on button hover - only show the particles
+                pass
             
             # Calculate title hover effect (moves up and down slightly)
             time = pygame.time.get_ticks() / 1000  # Convert to seconds
@@ -433,6 +482,8 @@ def main():
         pygame.display.flip()
         clock.tick(settings.FPS)
     
+    # Clean up before quitting
+    pygame.mixer.music.stop()
     pygame.quit()
     sys.exit()
 
