@@ -8,47 +8,95 @@ from cursor_manager import CursorManager
 from pixel_animation import PixelAnimation
 from transition import TransitionAnimation
 
+# Fonction utilitaire pour gérer les high scores
+def load_highscore():
+    """
+    Charge le meilleur score à partir du fichier.
+    
+    Returns:
+        int: Le meilleur score enregistré, 0 si aucun score n'existe
+    """
+    # Vérifie si le dossier highscore existe, sinon le crée
+    if not os.path.exists(settings.HIGHSCORE_DIR):
+        try:
+            os.makedirs(settings.HIGHSCORE_DIR)
+        except OSError as e:
+            print(f"Erreur lors de la création du dossier highscore: {e}")
+            return 0
+
+    highscore_path = os.path.join(settings.HIGHSCORE_DIR, settings.HIGHSCORE_FILE)
+    try:
+        if os.path.exists(highscore_path):
+            with open(highscore_path, 'r') as f:
+                return int(f.read().strip())
+    except (IOError, ValueError) as e:
+        print(f"Erreur lors du chargement du meilleur score: {e}")
+    
+    return 0
+
+def save_highscore(score):
+    """
+    Sauvegarde le meilleur score dans le fichier.
+    
+    Args:
+        score (int): Le score à sauvegarder
+    """
+    # Vérifie si le dossier highscore existe, sinon le crée
+    if not os.path.exists(settings.HIGHSCORE_DIR):
+        try:
+            os.makedirs(settings.HIGHSCORE_DIR)
+        except OSError as e:
+            print(f"Erreur lors de la création du dossier highscore: {e}")
+            return
+
+    highscore_path = os.path.join(settings.HIGHSCORE_DIR, settings.HIGHSCORE_FILE)
+    try:
+        with open(highscore_path, 'w') as f:
+            f.write(str(score))
+    except IOError as e:
+        print(f"Erreur lors de la sauvegarde du meilleur score: {e}")
+
 class GamePixel:
-    """Represents a game pixel that moves towards the heart."""
+    """Représente un pixel de jeu qui se déplace vers le cœur."""
     def __init__(self, x, y, angle, size, pixel_type="white"):
         """
-        Initialize a game pixel.
+        Initialise un pixel de jeu.
         
         Args:
-            x (float): Initial x position
-            y (float): Initial y position
-            angle (float): Movement angle in radians
-            size (int): Size of the pixel
-            pixel_type (str): Type of pixel - "white", "red", "green", or "orange"
+            x (float): Position x initiale
+            y (float): Position y initiale
+            angle (float): Angle de mouvement en radians
+            size (int): Taille du pixel
+            pixel_type (str): Type de pixel - "white", "red", "green", ou "orange"
         """
         self.x = x
         self.y = y
         self.angle = angle
-        self.size = size  # Size is now just used for scaling
+        self.size = size  # La taille est maintenant utilisée uniquement pour la mise à l'échelle
         self.type = pixel_type
         self.speed = settings.GAME_PIXEL_BASE_SPEED
         self.dead = False
-        self.alpha = 0  # Start completely transparent
-        self.fade_in_duration = 1.0  # Time in seconds to fade in completely
-        self.fade_in_timer = 0.0  # Timer for fade-in effect
+        self.alpha = 0  # Commence complètement transparent
+        self.fade_in_duration = 1.0  # Temps en secondes pour apparaître complètement
+        self.fade_in_timer = 0.0  # Minuteur pour l'effet d'apparition
         
-        # Add blinking state variables
+        # Ajoute des variables d'état de clignotement
         self.is_blinking = False
         self.blink_timer = 0.0
-        self.blink_interval = 0.5  # Start with slower blinking
+        self.blink_interval = 0.5  # Commence avec un clignotement plus lent
         self.blink_count = 0
-        self.max_blinks = 4  # Number of blinks before popping
-        self.is_visible = True  # Control visibility during blinking
+        self.max_blinks = 4  # Nombre de clignotements avant d'éclater
+        self.is_visible = True  # Contrôle la visibilité pendant le clignotement
         
-        # Add a flag to track if this pixel will cause damage
+        # Ajoute un indicateur pour suivre si ce pixel causera des dommages
         self.will_damage_heart = False
         self.will_apply_powerup = False
         
-        # Load the appropriate image based on type
+        # Charge l'image appropriée en fonction du type
         self.load_image()
         
     def load_image(self):
-        """Load the appropriate image for this pixel type."""
+        """Charge l'image appropriée pour ce type de pixel."""
         filename = ""
         if self.type == "white":
             filename = "whitepx.png"
@@ -62,10 +110,10 @@ class GamePixel:
         try:
             filepath = os.path.join(settings.ASSETS_DIR, filename)
             if not os.path.exists(filepath):
-                print(f"Error: Pixel image '{filepath}' not found.")
-                # Create a fallback colored square
-                base_size = 10  # Base size before applying the scaling factor
-                scaled_size = int(base_size * (self.size / 10.0))  # Scale relative to base size
+                print(f"Erreur : Image de pixel '{filepath}' introuvable.")
+                # Crée un carré coloré de secours
+                base_size = 10  # Taille de base avant d'appliquer le facteur d'échelle
+                scaled_size = int(base_size * (self.size / 10.0))  # Échelle relative à la taille de base
                 self.image = pygame.Surface((scaled_size, scaled_size))
                 if self.type == "white":
                     self.image.fill((255, 255, 255))
@@ -77,18 +125,18 @@ class GamePixel:
                     self.image.fill((255, 165, 0))
             else:
                 self.image = pygame.image.load(filepath)
-                # Get original size of the image
+                # Obtient la taille originale de l'image
                 original_size = self.image.get_size()
-                # Calculate scale factor based on requested size
+                # Calcule le facteur d'échelle basé sur la taille demandée
                 scale_factor = self.size / max(original_size)
-                # Scale the image
+                # Redimensionne l'image
                 scaled_size = (int(original_size[0] * scale_factor), int(original_size[1] * scale_factor))
                 self.image = pygame.transform.scale(self.image, scaled_size)
         except pygame.error as e:
-            print(f"Error loading pixel image {filename}: {e}")
-            # Create a fallback colored square with consistent sizing
-            base_size = 10  # Base size before applying the scaling factor
-            scaled_size = int(base_size * (self.size / 10.0))  # Scale relative to base size
+            print(f"Erreur lors du chargement de l'image de pixel {filename}: {e}")
+            # Crée un carré coloré de secours avec une taille cohérente
+            base_size = 10  # Taille de base avant d'appliquer le facteur d'échelle
+            scaled_size = int(base_size * (self.size / 10.0))  # Échelle relative à la taille de base
             self.image = pygame.Surface((scaled_size, scaled_size))
             if self.type == "white":
                 self.image.fill((255, 255, 255))
@@ -101,45 +149,45 @@ class GamePixel:
         
         self.rect = self.image.get_rect(center=(self.x, self.y))
         
-        # After image is loaded and rect is set, create a copy for alpha manipulation
+        # Après que l'image est chargée et que le rectangle est défini, crée une copie pour la manipulation de l'alpha
         if hasattr(self, 'image') and self.image:
             self.original_image = self.image.copy()
-            # Create a transparent version for initial display
+            # Crée une version transparente pour l'affichage initial
             self.image = self.original_image.copy()
             self.image.set_alpha(0)
         
     def start_blinking(self):
-        """Start the blinking effect when colliding with heart base"""
+        """Commence l'effet de clignotement lors de la collision avec la base du cœur"""
         self.is_blinking = True
         self.blink_timer = 0.0
         self.blink_count = 0
-        self.blink_interval = 0.5  # Start with slower blinking
+        self.blink_interval = 0.5  # Commence avec un clignotement plus lent
         self.is_visible = True
         
     def update(self, dt, heart_x, heart_y):
         """
-        Update the pixel position and check for heart proximity.
+        Met à jour la position du pixel et vérifie la proximité du cœur.
         
         Args:
-            dt (float): Time delta in seconds
-            heart_x (float): Heart x position
-            heart_y (float): Heart y position
+            dt (float): Delta temps en secondes
+            heart_x (float): Position x du cœur
+            heart_y (float): Position y du cœur
             
         Returns:
-            bool: True if the pixel is still active, False if it should be removed
+            bool: True si le pixel est toujours actif, False s'il doit être supprimé
         """
         if self.dead:
             return False
         
-        # Handle blinking state
+        # Gère l'état de clignotement
         if self.is_blinking:
             self.blink_timer += dt
             
             if self.blink_timer >= self.blink_interval:
-                # Toggle visibility
+                # Bascule la visibilité
                 self.is_visible = not self.is_visible
                 
-                # Apply alpha based on visibility
+                # Applique l'alpha en fonction de la visibilité
                 if self.is_visible:
                     self.image = self.original_image.copy()
                     self.image.set_alpha(255)
@@ -147,56 +195,56 @@ class GamePixel:
                     self.image = self.original_image.copy()
                     self.image.set_alpha(0)
                 
-                # Reset timer and increase blink speed
+                # Réinitialise le minuteur et augmente la vitesse de clignotement
                 self.blink_timer = 0
-                self.blink_count += 0.5  # Count half for each toggle
+                self.blink_count += 0.5  # Compte la moitié pour chaque basculement
                 
-                # Make blinking faster as it progresses
+                # Rend le clignotement plus rapide au fur et à mesure de sa progression
                 self.blink_interval = max(0.05, 0.5 - (0.1 * self.blink_count))
                 
-                # Check if we've blinked enough times
+                # Vérifie si nous avons suffisamment clignoté
                 if self.blink_count >= self.max_blinks:
                     self.dead = True
                     return False
             
-            # Don't move while blinking
+            # Ne bouge pas pendant le clignotement
             return True
             
-        # Update fade-in effect
+        # Met à jour l'effet d'apparition
         if self.fade_in_timer < self.fade_in_duration:
             self.fade_in_timer += dt
-            # Calculate new alpha
+            # Calcule le nouvel alpha
             self.alpha = int(255 * min(self.fade_in_timer / self.fade_in_duration, 1.0))
-            # Apply alpha to image
+            # Applique l'alpha à l'image
             self.image = self.original_image.copy()
             self.image.set_alpha(self.alpha)
         
-        # Calculate direction vector to heart
+        # Calcule le vecteur de direction vers le cœur
         dx = heart_x - self.x
         dy = heart_y - self.y
         distance = math.sqrt(dx*dx + dy*dy)
         
-        # Normalize direction
+        # Normalise la direction
         if distance > 0:
             dx /= distance
             dy /= distance
             
-        # Exponential speed increase as pixel gets closer to heart
-        # Use an exponential formula based on distance
+        # Augmentation exponentielle de la vitesse à mesure que le pixel se rapproche du cœur
+        # Utilise une formule exponentielle basée sur la distance
         if distance < settings.GAME_PIXEL_PROXIMITY_THRESHOLD:
-            # Calculate progress (0 = far away, 1 = at the heart)
+            # Calcule la progression (0 = loin, 1 = au cœur)
             progress = 1.0 - distance / settings.GAME_PIXEL_PROXIMITY_THRESHOLD
-            # Exponential acceleration (power of 2 for moderate effect, increase for stronger effect)
+            # Accélération exponentielle (puissance de 2 pour un effet modéré, augmenter pour un effet plus fort)
             acceleration_factor = 1.0 + (progress * progress * settings.GAME_PIXEL_ACCELERATION)
             current_speed = self.speed * acceleration_factor
         else:
             current_speed = self.speed
             
-        # Move pixel towards heart
+        # Déplace le pixel vers le cœur
         self.x += dx * current_speed * dt
         self.y += dy * current_speed * dt
         
-        # Update rectangle position
+        # Met à jour la position du rectangle
         self.rect.center = (self.x, self.y)
         
         return True
@@ -255,6 +303,18 @@ class Game:
         self.running = True
         self.return_to_menu = False  # Flag to indicate whether to return to menu
         self.game_over_pending = False  # Flag to track delayed game over transition
+        
+        # Score system
+        self.score = 0
+        self.highscore = load_highscore()
+        
+        # Initialize font for score display
+        pygame.font.init()
+        try:
+            self.font = pygame.font.SysFont(settings.SCORE_FONT_NAME, settings.SCORE_FONT_SIZE, bold=settings.SCORE_FONT_BOLD)
+        except pygame.error as e:
+            print(f"Erreur lors du chargement de la police: {e}")
+            self.font = None
         
         # Fade in state
         self.fading_in = skip_entry_flash
@@ -649,6 +709,19 @@ class Game:
         pygame.time.set_timer(pygame.USEREVENT, 1500)  # 1.5 second delay
         self.game_over_pending = True
     
+    def add_score(self, points):
+        """
+        Ajoute des points au score actuel.
+        
+        Args:
+            points (int): Nombre de points à ajouter
+        """
+        self.score += points
+        # Vérifie si on a battu le meilleur score
+        if self.score > self.highscore:
+            self.highscore = self.score
+            save_highscore(self.highscore)
+    
     def handle_events(self):
         """Handle game events."""
         # If in exiting state, don't process any events
@@ -670,6 +743,10 @@ class Game:
                 if hasattr(self, 'game_over_pending') and self.game_over_pending:
                     pygame.time.set_timer(pygame.USEREVENT, 0)  # Cancel the timer
                     self.game_over_pending = False
+                    # Sauvegarde le high score avant de quitter
+                    if self.score > self.highscore:
+                        self.highscore = self.score
+                        save_highscore(self.highscore)
                     self.start_exit_transition()
                 
             elif event.type == pygame.MOUSEMOTION:
@@ -723,6 +800,8 @@ class Game:
                                 # White pixel: destroy and create animation
                                 clicked_pixel.mark_as_dead()
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="white")
+                                # Ajouter 1 point pour un pixel blanc détruit
+                                self.add_score(settings.WHITE_PIXEL_POINTS)
                                 
                             elif clicked_pixel.type == "red":
                                 # Red pixel: game over
@@ -752,12 +831,19 @@ class Game:
                                     if other_pixel.type in ["white", "orange"] and other_pixel != clicked_pixel:
                                         self.pixel_animation.spawn_particles(other_pixel.x, other_pixel.y, color=other_pixel.type)
                                         other_pixel.mark_as_dead()
+                                        # Ajouter des points pour chaque pixel détruit
+                                        if other_pixel.type == "white":
+                                            self.add_score(settings.WHITE_PIXEL_POINTS)
+                                        elif other_pixel.type == "orange":
+                                            self.add_score(settings.ORANGE_PIXEL_POINTS)
                             
                             elif clicked_pixel.type == "orange":
                                 # Orange pixel: destroy and spawn white pixels in opposite direction from heart
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="orange")
                                 self.spawn_orange_splash(clicked_pixel.x, clicked_pixel.y)
                                 clicked_pixel.mark_as_dead()
+                                # Ajouter 3 points pour un pixel orange détruit
+                                self.add_score(settings.ORANGE_PIXEL_POINTS)
                     
                     # If clicked on an interactive element like a button or pixel, play explode sound
                     if clicked_on_interactive and not clicked_pixel and hasattr(self, 'explode_sound') and self.explode_sound:
@@ -776,6 +862,10 @@ class Game:
                         # Check if mouse is still over the button
                         if hasattr(self, 'exit_rect') and self.exit_rect and self.exit_rect.collidepoint(event.pos):
                             print("Returning to main menu")
+                            # Sauvegarde le high score avant de quitter
+                            if self.score > self.highscore:
+                                self.highscore = self.score
+                                save_highscore(self.highscore)
                             self.start_exit_transition()
         
         return True
@@ -786,9 +876,12 @@ class Game:
         self.exit_timer = 0
         self.exit_fade_timer = 0
         
-        # Fade out game music
+        # Arrêter complètement la musique du jeu au lieu de simplement la faire disparaître
         try:
+            # Utiliser fadeout pour une transition douce, mais s'assurer que la musique est arrêtée
             pygame.mixer.music.fadeout(500)  # Fade out over 500ms
+            # Ajout d'un arrêt complet après le fadeout pour être sûr
+            pygame.mixer.music.stop()
         except pygame.error as e:
             print(f"Error fading out game music: {e}")
         
@@ -857,6 +950,11 @@ class Game:
                 
                 # Return to menu immediately when the flash starts
                 if self.exit_fade_timer < 0.05:  # Just started the flash
+                    # S'assurer que toute la musique est arrêtée avant de retourner au menu
+                    try:
+                        pygame.mixer.music.stop()
+                    except pygame.error:
+                        pass
                     self.return_to_menu = True
                     self.running = False
                 
@@ -931,6 +1029,9 @@ class Game:
                 elif pixel.type == "green":
                     # Mark pixel as one that will apply a powerup when it finishes blinking
                     pixel.will_apply_powerup = True
+                elif pixel.type == "red":
+                    # Si un pixel rouge touche la base, ajouter 5 points 
+                    self.add_score(settings.RED_PIXEL_BASE_POINTS)
                     
         # Remove dead pixels (in reverse order to maintain correct indices)
         for i in sorted(pixels_to_remove, reverse=True):
@@ -1013,6 +1114,12 @@ class Game:
         # Draw exit button
         if hasattr(self, 'exit_image') and self.exit_image is not None:
             self.screen.blit(self.exit_image, self.exit_rect)
+        
+        # Draw score
+        if self.font:
+            score_text = self.font.render(f"{settings.SCORE_PREFIX}{self.score}", True, settings.SCORE_TEXT_COLOR)
+            score_rect = score_text.get_rect(midtop=(settings.SCORE_X_POSITION, settings.SCORE_Y_POSITION))
+            self.screen.blit(score_text, score_rect)
         
         # Draw pixel animation effects
         self.pixel_animation.draw(self.screen)

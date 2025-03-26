@@ -4,133 +4,133 @@ import math
 import settings
 
 class TransitionElement:
-    """Represents a UI element with physics during transition animation."""
+    """Représente un élément d'interface utilisateur avec physique pendant l'animation de transition."""
     def __init__(self, image, rect, reverse=False):
         """
-        Initialize a transition element with physics properties.
+        Initialise un élément de transition avec des propriétés physiques.
         
         Args:
-            image (Surface): The image of the UI element
-            rect (Rect): The rectangle defining the element's position and size
-            reverse (bool): If True, element will enter the screen rather than exit
+            image (Surface): L'image de l'élément d'interface
+            rect (Rect): Le rectangle définissant la position et la taille de l'élément
+            reverse (bool): Si True, l'élément entrera dans l'écran au lieu d'en sortir
         """
-        self.image = image.copy()  # Create a copy of the image to avoid modifying the original
-        self.original_image = image.copy()  # Keep the original for rotation
+        self.image = image.copy()  # Crée une copie de l'image pour éviter de modifier l'original
+        self.original_image = image.copy()  # Conserve l'original pour la rotation
         self.rect = rect.copy()
         self.reverse = reverse
         
         if reverse:
-            # For reverse transitions, start off-screen
+            # Pour les transitions inversées, commence hors de l'écran
             self.x = random.randint(-100, settings.SCREEN_WIDTH + 100)
-            self.y = settings.SCREEN_HEIGHT + 100  # Start below the screen
+            self.y = settings.SCREEN_HEIGHT + 100  # Commence sous l'écran
             
-            # Final destination will be the original rect center
+            # La destination finale sera le centre du rectangle original
             self.dest_x = rect.centerx
             self.dest_y = rect.centery
         else:
-            # Normal transition (elements fall off screen)
+            # Transition normale (les éléments tombent hors de l'écran)
             self.x = rect.centerx
             self.y = rect.centery
         
-        # Generate random angle between min and max settings
+        # Génère un angle aléatoire entre les paramètres min et max
         angle_rad = math.radians(random.uniform(
             settings.TRANSITION_MIN_ANGLE, 
             settings.TRANSITION_MAX_ANGLE
         ))
         
-        # Generate random speed
+        # Génère une vitesse aléatoire
         speed = random.uniform(
             settings.TRANSITION_MIN_SPEED,
             settings.TRANSITION_MAX_SPEED
         )
         
-        # Calculate initial velocity based on angle and speed
+        # Calcule la vitesse initiale en fonction de l'angle et de la vitesse
         if reverse:
-            # For reverse, velocity points toward final destination
-            self.velocity_x = 0  # Will be set in update
-            self.velocity_y = 0  # Will be set in update
+            # Pour l'inverse, la vitesse pointe vers la destination finale
+            self.velocity_x = 0  # Sera défini dans update
+            self.velocity_y = 0  # Sera défini dans update
         else:
-            # Normal transition
+            # Transition normale
             self.velocity_x = math.sin(angle_rad) * speed
-            self.velocity_y = math.cos(angle_rad) * speed  # Start with downward velocity
+            self.velocity_y = math.cos(angle_rad) * speed  # Commence avec une vitesse vers le bas
         
         # Rotation
-        self.angle = 0  # Current rotation angle
+        self.angle = 0  # Angle de rotation actuel
         self.rotation_speed = random.uniform(-1, 1) * settings.TRANSITION_ROTATION_SPEED
         
-        # Animation progress
+        # Progression de l'animation
         self.elapsed_time = 0
     
     def update(self, dt):
         """
-        Update the element's position and rotation based on physics.
+        Met à jour la position et la rotation de l'élément en fonction de la physique.
         
         Args:
-            dt (float): Time delta in seconds
+            dt (float): Delta temps en secondes
             
         Returns:
-            bool: True if the animation should continue, False if complete
+            bool: True si l'animation doit continuer, False si terminée
         """
         self.elapsed_time += dt
         
         if self.reverse:
-            # Reverse transition - moving element onto screen
-            # Use a easing function to move elements to their destinations
-            progress = min(self.elapsed_time / 1.0, 1.0)  # 1.0 second duration
+            # Transition inversée - déplacement de l'élément sur l'écran
+            # Utilise une fonction d'assouplissement pour déplacer les éléments vers leurs destinations
+            progress = min(self.elapsed_time / 1.0, 1.0)  # Durée de 1.0 seconde
             
-            # Ease-out function
+            # Fonction d'assouplissement
             ease = 1 - (1 - progress) * (1 - progress)
             
-            # Move toward destination
+            # Se déplace vers la destination
             self.x = self.x + (self.dest_x - self.x) * ease * 5 * dt
             self.y = self.y + (self.dest_y - self.y) * ease * 5 * dt
             
-            # Reduce rotation as we approach destination
+            # Réduit la rotation en approchant de la destination
             self.rotation_speed *= 0.95
             
-            # Check if we've reached the destination
+            # Vérifie si nous avons atteint la destination
             distance = math.sqrt((self.x - self.dest_x)**2 + (self.y - self.dest_y)**2)
             if distance < 5 and self.elapsed_time > 1.0:
-                return False  # Animation complete
+                return False  # Animation terminée
                 
         else:
-            # Normal transition - elements fall off screen
-            # Update position based on velocity
+            # Transition normale - les éléments tombent hors de l'écran
+            # Met à jour la position en fonction de la vitesse
             self.x += self.velocity_x * dt
             self.y += self.velocity_y * dt
             
-            # Apply gravity
-            self.velocity_y += settings.TRANSITION_GRAVITY * dt * 60  # Scale by dt and target 60fps
+            # Applique la gravité
+            self.velocity_y += settings.TRANSITION_GRAVITY * dt * 60  # Mise à l'échelle par dt et cible 60fps
             
-            # Check if element has fallen off the bottom of the screen
+            # Vérifie si l'élément est tombé hors du bas de l'écran
             if self.y - self.rect.height > settings.SCREEN_HEIGHT:
                 return False
         
-        # Update rotation
+        # Met à jour la rotation
         self.angle += self.rotation_speed * dt * 60
         
-        # Rotate the image
+        # Fait pivoter l'image
         self.image = pygame.transform.rotate(self.original_image, self.angle)
         
-        # Update rect position while keeping the center
+        # Met à jour la position du rectangle tout en gardant le centre
         self.rect = self.image.get_rect(center=(self.x, self.y))
         
         return True
     
     def draw(self, surface):
         """
-        Draw the element on the given surface.
+        Dessine l'élément sur la surface donnée.
         
         Args:
-            surface (Surface): Pygame surface to draw on
+            surface (Surface): Surface Pygame sur laquelle dessiner
         """
         surface.blit(self.image, self.rect)
 
 
 class TransitionAnimation:
-    """Manages the transition animation for UI elements."""
+    """Gère l'animation de transition pour les éléments d'interface utilisateur."""
     def __init__(self):
-        """Initialize the transition animation system."""
+        """Initialise le système d'animation de transition."""
         self.elements = []
         self.is_active = False
         self.start_time = 0
@@ -142,20 +142,20 @@ class TransitionAnimation:
         
     def start(self, ui_elements, target_scene=None, reverse=False):
         """
-        Start the transition animation with the provided UI elements.
+        Démarre l'animation de transition avec les éléments d'interface fournis.
         
         Args:
-            ui_elements (list): List of (image, rect) tuples for UI elements
-            target_scene (str, optional): The scene to transition to after animation
-            reverse (bool): If True, elements enter screen rather than exit
+            ui_elements (list): Liste de tuples (image, rect) pour les éléments d'interface
+            target_scene (str, optional): La scène vers laquelle transitionner après l'animation
+            reverse (bool): Si True, les éléments entrent dans l'écran au lieu d'en sortir
         """
         self.elements = []
         self.reverse = reverse
         self.target_scene = target_scene
         
-        # Create the transition elements
+        # Crée les éléments de transition
         for image, rect in ui_elements:
-            # Skip None elements or empty rects
+            # Ignore les éléments None ou les rectangles vides
             if image is None or rect is None:
                 continue
             self.elements.append(TransitionElement(image, rect, reverse))
@@ -167,13 +167,13 @@ class TransitionAnimation:
         
     def update(self, dt):
         """
-        Update all transition elements.
+        Met à jour tous les éléments de transition.
         
         Args:
-            dt (float): Time delta in seconds
+            dt (float): Delta temps en secondes
             
         Returns:
-            bool: True if animation is still active, False if completed
+            bool: True si l'animation est toujours active, False si terminée
         """
         if not self.is_active:
             return False
@@ -181,16 +181,16 @@ class TransitionAnimation:
         current_time = pygame.time.get_ticks() / 1000.0
         elapsed_time = current_time - self.start_time
         
-        # Check if animation duration has passed (safety timeout)
+        # Vérifie si la durée de l'animation est passée (délai de sécurité)
         if elapsed_time >= self.duration:
             self.is_active = False
             self.elements = []
             return False
         
-        # Update each element and remove those that have fallen off screen
+        # Met à jour chaque élément et supprime ceux qui sont tombés hors de l'écran
         self.elements = [elem for elem in self.elements if elem.update(dt)]
         
-        # If all elements are gone, end animation early and set the flag
+        # Si tous les éléments ont disparu, termine l'animation plus tôt et définit le drapeau
         if not self.elements and self.initial_element_count > 0:
             self.all_elements_exited = True
             self.is_active = False
@@ -200,10 +200,10 @@ class TransitionAnimation:
         
     def draw(self, surface):
         """
-        Draw all transition elements on the given surface.
+        Dessine tous les éléments de transition sur la surface donnée.
         
         Args:
-            surface (Surface): Pygame surface to draw on
+            surface (Surface): Surface Pygame sur laquelle dessiner
         """
         if self.is_active:
             for element in self.elements:
@@ -211,18 +211,18 @@ class TransitionAnimation:
                 
     def is_finished(self):
         """
-        Check if the transition animation has finished.
+        Vérifie si l'animation de transition est terminée.
         
         Returns:
-            bool: True if animation is finished, False otherwise
+            bool: True si l'animation est terminée, False sinon
         """
         return not self.is_active
         
     def all_elements_exited_screen(self):
         """
-        Check if all UI elements have exited the screen.
+        Vérifie si tous les éléments d'interface ont quitté l'écran.
         
         Returns:
-            bool: True if all elements have exited the screen, False otherwise
+            bool: True si tous les éléments ont quitté l'écran, False sinon
         """
         return self.all_elements_exited 

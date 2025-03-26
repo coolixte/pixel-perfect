@@ -2,12 +2,12 @@ import pygame
 import settings
 
 class ScreenFlash:
-    """Handles screen flash animation effect for transitions between scenes."""
+    """Gère l'effet d'animation de flash d'écran pour les transitions entre les scènes."""
     
     def __init__(self):
-        """Initialize the screen flash animation system."""
+        """Initialise le système d'animation de flash d'écran."""
         self.active = False
-        self.alpha = 0  # 0 = fully transparent, 255 = fully opaque
+        self.alpha = 0  # 0 = complètement transparent, 255 = complètement opaque
         self.flash_surface = pygame.Surface((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))
         self.flash_surface.fill(settings.WHITE)
         self.timer = 0
@@ -15,42 +15,42 @@ class ScreenFlash:
     
     def start(self, callback=None):
         """
-        Start the screen flash animation.
+        Démarre l'animation de flash d'écran.
         
         Args:
-            callback (function, optional): Function to call when the flash is complete
+            callback (function, optional): Fonction à appeler lorsque le flash est terminé
         """
         self.active = True
-        self.alpha = 255  # Start fully opaque
+        self.alpha = 255  # Commence complètement opaque
         self.timer = 0
         self.callback = callback
     
     def update(self, dt):
         """
-        Update the screen flash animation.
+        Met à jour l'animation de flash d'écran.
         
         Args:
-            dt (float): Delta time in seconds
+            dt (float): Delta temps en secondes
             
         Returns:
-            bool: True if the flash is still active, False otherwise
+            bool: True si le flash est toujours actif, False sinon
         """
         if not self.active:
             return False
             
-        # Update timer
+        # Met à jour le timer
         self.timer += dt
         
-        # Calculate alpha based on timer and fade speed
+        # Calcule l'alpha en fonction du timer et de la vitesse de fondu
         fade_progress = min(self.timer / settings.FLASH_DURATION, 1.0)
         self.alpha = max(0, 255 - int(255 * fade_progress * settings.FLASH_FADE_SPEED))
         
-        # Check if flash is complete
+        # Vérifie si le flash est terminé
         if self.timer >= settings.FLASH_DURATION or self.alpha <= 0:
             self.active = False
             self.alpha = 0
             
-            # Call the callback if provided
+            # Appelle le callback s'il est fourni
             if self.callback:
                 self.callback()
             
@@ -60,10 +60,10 @@ class ScreenFlash:
     
     def draw(self, surface):
         """
-        Draw the screen flash on the given surface.
+        Dessine le flash d'écran sur la surface donnée.
         
         Args:
-            surface (Surface): Surface to draw the flash on
+            surface (Surface): Surface sur laquelle dessiner le flash
         """
         if self.active and self.alpha > 0:
             self.flash_surface.set_alpha(self.alpha)

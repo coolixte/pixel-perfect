@@ -4,18 +4,18 @@ import math
 import settings
 
 class PixelParticle:
-    """Represents a single pixel particle in the animation."""
+    """Représente une particule de pixel unique dans l'animation."""
     def __init__(self, x, y, angle, speed, size=3, color=(255, 255, 255)):
         """
-        Initialize a pixel particle.
+        Initialise une particule de pixel.
         
         Args:
-            x (float): Initial x position
-            y (float): Initial y position
-            angle (float): Initial movement angle
-            speed (float): Initial speed
-            size (int): Size of the pixel in pixels
-            color (tuple): RGB color tuple
+            x (float): Position x initiale
+            y (float): Position y initiale
+            angle (float): Angle de mouvement initial
+            speed (float): Vitesse initiale
+            size (int): Taille du pixel en pixels
+            color (tuple): Tuple de couleur RGB
         """
         self.x = x
         self.y = y
@@ -26,34 +26,34 @@ class PixelParticle:
         self.size = size
         self.color = color
         self.gravity = random.uniform(0.5, 1.5) * settings.PIXEL_GRAVITY
-        self.life = 1.0  # Full life
-        self.fade_speed = random.uniform(0.5, 1.5)  # Random fade speed
+        self.life = 1.0  # Vie complète
+        self.fade_speed = random.uniform(0.5, 1.5)  # Vitesse de fondu aléatoire
         
     def update(self, dt, screen_height):
         """
-        Update the particle position and properties.
+        Met à jour la position et les propriétés de la particule.
         
         Args:
-            dt (float): Time delta in seconds
-            screen_height (int): Height of the screen for boundary checking
+            dt (float): Delta temps en secondes
+            screen_height (int): Hauteur de l'écran pour la vérification des limites
         
         Returns:
-            bool: True if the particle is still on screen, False if it should be removed
+            bool: True si la particule est toujours à l'écran, False si elle doit être supprimée
         """
-        # Update position based on velocity
+        # Met à jour la position en fonction de la vitesse
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
         
-        # Apply gravity
-        self.velocity_y += self.gravity * dt * 60  # Scale by dt and target 60fps
+        # Applique la gravité
+        self.velocity_y += self.gravity * dt * 60  # Mise à l'échelle par dt et cible 60fps
         
-        # Add slight drag/air resistance
+        # Ajoute une légère traînée/résistance à l'air
         self.velocity_x *= 0.99
         
-        # Update life (fade)
+        # Met à jour la vie (fondu)
         self.life -= self.fade_speed * dt
         
-        # Check if particle has fallen off the bottom of the screen or faded out
+        # Vérifie si la particule est tombée en bas de l'écran ou s'est estompée
         if self.y > screen_height or self.life <= 0:
             return False
             
@@ -61,37 +61,37 @@ class PixelParticle:
         
     def draw(self, surface):
         """
-        Draw the particle on the given surface.
+        Dessine la particule sur la surface donnée.
         
         Args:
-            surface (Surface): Pygame surface to draw on
+            surface (Surface): Surface Pygame sur laquelle dessiner
         """
-        # Calculate alpha based on life
+        # Calcule l'alpha en fonction de la vie
         alpha = int(255 * self.life)
         
-        # Only draw if still visible
+        # Dessine uniquement si encore visible
         if alpha > 0:
-            # Create a surface for the particle with alpha channel
+            # Crée une surface pour la particule avec canal alpha
             particle_surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
             
-            # Get the color with alpha
+            # Obtient la couleur avec alpha
             color_with_alpha = (*self.color, alpha)
             
-            # Fill with the color
+            # Remplit avec la couleur
             particle_surface.fill(color_with_alpha)
             
-            # Draw the particle
+            # Dessine la particule
             surface.blit(particle_surface, (self.x - self.size // 2, self.y - self.size // 2))
 
 
 class PixelAnimation:
-    """Manages multiple pixel particles for animations."""
+    """Gère plusieurs particules de pixels pour les animations."""
     def __init__(self, auto_spawn=True):
         """
-        Initialize the pixel animation system.
+        Initialise le système d'animation de pixels.
         
         Args:
-            auto_spawn (bool): Whether to automatically spawn particles at random intervals
+            auto_spawn (bool): Indique s'il faut générer automatiquement des particules à intervalles aléatoires
         """
         self.particles = []
         self.last_random_spawn = 0
@@ -99,10 +99,10 @@ class PixelAnimation:
             settings.PIXEL_MIN_INTERVAL, 
             settings.PIXEL_MAX_INTERVAL
         )
-        self.button_hover_states = {}  # Track button hover states
-        self.auto_spawn = auto_spawn  # Whether to spawn particles automatically
+        self.button_hover_states = {}  # Suit les états de survol des boutons
+        self.auto_spawn = auto_spawn  # Indique s'il faut générer des particules automatiquement
         
-        # Create particle colors dictionary
+        # Crée un dictionnaire de couleurs de particules
         self.particle_colors = {
             "white": (255, 255, 255),
             "red": (255, 0, 0),
@@ -112,46 +112,46 @@ class PixelAnimation:
         
     def spawn_particles(self, x, y, count=None, color="white"):
         """
-        Spawn a group of particles at the given position with color-specific behaviors.
+        Génère un groupe de particules à la position donnée avec des comportements spécifiques à la couleur.
         
         Args:
-            x (int): X-coordinate to spawn particles
-            y (int): Y-coordinate to spawn particles
-            count (int, optional): Number of particles to spawn. If None, uses PIXEL_CLICK_COUNT.
-            color (str, optional): Color of the particles. Default is "white".
+            x (int): Coordonnée X pour générer les particules
+            y (int): Coordonnée Y pour générer les particules
+            count (int, optional): Nombre de particules à générer. Si None, utilise PIXEL_CLICK_COUNT.
+            color (str, optional): Couleur des particules. Par défaut, c'est "white".
         """
         if count is None:
             count = settings.PIXEL_CLICK_COUNT
             
-        # Get color from dictionary or use white as default
+        # Obtient la couleur du dictionnaire ou utilise le blanc par défaut
         particle_color = self.particle_colors.get(color, (255, 255, 255))
         
         for _ in range(count):
-            # Base parameters that will be modified based on color
+            # Paramètres de base qui seront modifiés en fonction de la couleur
             angle = random.uniform(0, 2 * math.pi)
             speed = random.uniform(50, 150)
             size = random.randint(settings.PIXEL_MIN_SIZE, settings.PIXEL_MAX_SIZE)
             gravity = random.uniform(0.5, 1.5) * settings.PIXEL_GRAVITY
             fade_speed = random.uniform(0.5, 1.5)
             
-            # Customize behavior based on color
+            # Personnalise le comportement en fonction de la couleur
             if color == "red":
-                # Red particles: faster, larger, quick fade
+                # Particules rouges : plus rapides, plus grandes, fondu rapide
                 speed *= 1.5
                 size *= 1.5
                 fade_speed *= 2.0
                 
             elif color == "green":
-                # Green particles: float upward (negative gravity), slower fade
-                gravity *= -0.5  # Float upward
-                fade_speed *= 0.7  # Slower fade
+                # Particules vertes : flottent vers le haut (gravité négative), fondu plus lent
+                gravity *= -0.5  # Flotte vers le haut
+                fade_speed *= 0.7  # Fondu plus lent
                 
             elif color == "orange":
-                # Orange particles: outward explosion, higher particle count
+                # Particules orange : explosion vers l'extérieur, nombre de particules plus élevé
                 speed *= 1.3
-                # No need to adjust count here as it's handled by ORANGE_SPLASH settings
+                # Pas besoin d'ajuster le nombre ici car il est géré par les paramètres ORANGE_SPLASH
                 
-            # Create particle with color-specific behaviors
+            # Crée une particule avec des comportements spécifiques à la couleur
             particle = PixelParticle(x, y, angle, speed, size, particle_color)
             particle.gravity = gravity
             particle.fade_speed = fade_speed
@@ -159,103 +159,101 @@ class PixelAnimation:
     
     def spawn_button_hover_particles(self, button):
         """
-        Spawn particles at random positions along the button's edge when hovered.
+        Génère des particules à des positions aléatoires le long du bord du bouton lors du survol.
         
         Args:
-            button: The button object being hovered
+            button: L'objet bouton survolé
         """
-        # Get button rect
+        # Obtient le rectangle du bouton
         rect = button.rect
         
-        # Spawn the specified number of particles
+        # Génère le nombre spécifié de particules
         for _ in range(settings.PIXEL_BUTTON_HOVER_COUNT):
-            # Choose a random edge of the button (0=top, 1=right, 2=bottom, 3=left)
+            # Choisit un bord aléatoire du bouton (0=haut, 1=droite, 2=bas, 3=gauche)
             edge = random.randint(0, 3)
             
-            if edge == 0:  # Top edge
+            if edge == 0:  # Bord supérieur
                 x = random.randint(rect.left, rect.right)
                 y = rect.top
-            elif edge == 1:  # Right edge
+            elif edge == 1:  # Bord droit
                 x = rect.right
                 y = random.randint(rect.top, rect.bottom)
-            elif edge == 2:  # Bottom edge
+            elif edge == 2:  # Bord inférieur
                 x = random.randint(rect.left, rect.right)
                 y = rect.bottom
-            else:  # Left edge
+            else:  # Bord gauche
                 x = rect.left
                 y = random.randint(rect.top, rect.bottom)
             
-            # Create particles with slightly different parameters for button hover
+            # Crée des particules avec des paramètres légèrement différents pour le survol du bouton
             angle = random.uniform(0, 2 * math.pi)
-            speed = random.uniform(50, 150)  # Slightly slower than click particles
+            speed = random.uniform(50, 150)  # Légèrement plus lent que les particules de clic
             size = random.randint(settings.PIXEL_MIN_SIZE, settings.PIXEL_MAX_SIZE)
-            color = (255, 255, 255)  # White for button hover
+            color = (255, 255, 255)  # Blanc pour le survol du bouton
             
             particle = PixelParticle(x, y, angle, speed, size, color)
             self.particles.append(particle)
     
     def check_button_hover(self, buttons):
         """
-        Check if buttons are being hovered and spawn particles if needed.
+        Vérifie si les boutons sont survolés et génère des particules si nécessaire.
         
         Args:
-            buttons (list): List of button objects to check
+            buttons (list): Liste des objets bouton à vérifier
             
         Returns:
-            bool: True if particles were spawned, False otherwise
+            bool: True si des particules ont été générées, False sinon
         """
         particles_spawned = False
         
         for button in buttons:
-            button_id = id(button)  # Use object ID as unique identifier
+            button_id = id(button)  # Utilise l'ID de l'objet comme identifiant unique
             
-            # If button is hovered now but wasn't before, spawn particles
+            # Si le bouton est survolé maintenant mais ne l'était pas avant, génère des particules
             if button.hovered and not self.button_hover_states.get(button_id, False):
                 self.spawn_button_hover_particles(button)
                 particles_spawned = True
             
-            # Update hover state
+            # Met à jour l'état de survol
             self.button_hover_states[button_id] = button.hovered
             
         return particles_spawned
     
     def spawn_random_particles(self, screen_width, screen_height):
         """
-        Spawn particles at a random location on the screen.
+        Génère des particules à un emplacement aléatoire sur l'écran.
         
         Args:
-            screen_width (int): Width of the screen
-            screen_height (int): Height of the screen
+            screen_width (int): Largeur de l'écran
+            screen_height (int): Hauteur de l'écran
         """
-        # Choose a random position that's not too close to the edges
+        # Choisit une position aléatoire qui n'est pas trop proche des bords
         margin = 100
         x = random.randint(margin, screen_width - margin)
         y = random.randint(margin, screen_height - margin)
         
-        # Spawn fewer particles for random events
+        # Génère moins de particules pour les événements aléatoires
         count = random.randint(settings.PIXEL_MIN_COUNT, settings.PIXEL_MAX_COUNT)
         self.spawn_particles(x, y, count=count)
     
     def update(self, dt, screen_width, screen_height):
         """
-        Update all particles and check for random spawn events.
+        Met à jour toutes les particules et vérifie les événements de génération aléatoire.
         
         Args:
-            dt (float): Time delta in seconds
-            screen_width (int): Width of the screen
-            screen_height (int): Height of the screen
+            dt (float): Delta temps en secondes
+            screen_width (int): Largeur de l'écran
+            screen_height (int): Hauteur de l'écran
         """
-        # Update existing particles and remove those that fall off the screen
+        # Met à jour les particules existantes et supprime celles qui sortent de l'écran
         self.particles = [p for p in self.particles if p.update(dt, screen_height)]
         
-        # Check if auto-spawning is enabled
+        # Vérifie s'il est temps de générer des particules aléatoires
         if self.auto_spawn:
-            # Check if it's time for a random spawn
             self.last_random_spawn += dt
             if self.last_random_spawn >= self.random_spawn_interval:
                 self.spawn_random_particles(screen_width, screen_height)
                 self.last_random_spawn = 0
-                # Set a new random interval
                 self.random_spawn_interval = random.uniform(
                     settings.PIXEL_MIN_INTERVAL, 
                     settings.PIXEL_MAX_INTERVAL
@@ -263,10 +261,10 @@ class PixelAnimation:
     
     def draw(self, surface):
         """
-        Draw all particles on the given surface.
+        Dessine toutes les particules sur la surface donnée.
         
         Args:
-            surface (Surface): Pygame surface to draw on
+            surface (Surface): Surface Pygame sur laquelle dessiner
         """
         for particle in self.particles:
             particle.draw(surface)

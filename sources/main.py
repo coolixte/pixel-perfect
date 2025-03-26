@@ -2,46 +2,68 @@ import pygame
 import sys
 import os
 import math
-import settings  # Import settings
+import settings  # Importe les paramètres
 from cursor_manager import CursorManager
-from pixel_animation import PixelAnimation  # Import our animation system
-from transition import TransitionAnimation  # Import our new transition animation system
-from screen_flash import ScreenFlash  # Import our screen flash animation system
-import game  # Import our game module
+from pixel_animation import PixelAnimation  # Importe notre système d'animation
+from transition import TransitionAnimation  # Importe notre nouveau système d'animation de transition
+from screen_flash import ScreenFlash  # Importe notre système d'animation de flash d'écran
+import game  # Importe notre module de jeu
 
-# Initialize pygame
+# Fonction pour charger le meilleur score
+def load_highscore():
+    """
+    Charge le meilleur score à partir du fichier.
+    
+    Returns:
+        int: Le meilleur score enregistré, 0 si aucun score n'existe
+    """
+    # Vérifie si le dossier highscore existe
+    if not os.path.exists(settings.HIGHSCORE_DIR):
+        return 0
+
+    highscore_path = os.path.join(settings.HIGHSCORE_DIR, settings.HIGHSCORE_FILE)
+    try:
+        if os.path.exists(highscore_path):
+            with open(highscore_path, 'r') as f:
+                return int(f.read().strip())
+    except (IOError, ValueError) as e:
+        print(f"Erreur lors du chargement du meilleur score: {e}")
+    
+    return 0
+
+# Initialise pygame
 pygame.init()
-pygame.mixer.init()  # Initialize the mixer for audio playback
+pygame.mixer.init()  # Initialise le mixer pour la lecture audio
 
-# Create the screen based on settings
+# Crée l'écran en fonction des paramètres
 if settings.BORDERLESS_WINDOW:
     screen = pygame.display.set_mode(
         (settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT),
-        pygame.NOFRAME  # Remove window frame/border including title bar
+        pygame.NOFRAME  # Supprime le cadre/bordure de la fenêtre, y compris la barre de titre
     )
 else:
     screen = pygame.display.set_mode(
         (settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
     )
     
-pygame.display.set_caption("Pixel Perfect")  # Set caption for taskbar
+pygame.display.set_caption("Pixel Perfect")  # Définit la légende pour la barre des tâches
 
-# Load assets
+# Charge les ressources
 def load_image(filename):
     filepath = os.path.join(settings.ASSETS_DIR, filename)
     try:
         if not os.path.exists(filepath):
-            print(f"Error: Image file '{filepath}' not found.")
-            print(f"Please ensure '{filename}' is in the '{settings.ASSETS_DIR}' folder.")
+            print(f"Erreur : Fichier image '{filepath}' introuvable.")
+            print(f"Veuillez vous assurer que '{filename}' est dans le dossier '{settings.ASSETS_DIR}'.")
             sys.exit()
         
         image = pygame.image.load(filepath)
         return image
     except pygame.error as e:
-        print(f"Error loading image {filepath}: {e}")
+        print(f"Erreur lors du chargement de l'image {filepath}: {e}")
         sys.exit()
 
-# Load all required images
+# Charge toutes les images requises
 title_img = load_image("title.png")
 play_btn = load_image("PlayBtn.png")
 play_click = load_image("PlayClick.png")
@@ -50,23 +72,23 @@ opt_click = load_image("OptClick.png")
 exit_btn = load_image("ExitBtn.png")
 exit_click = load_image("ExitClick.png")
 border_img = load_image("fullborder.png")
-name_img = load_image("name.png")  # Load the name image
+name_img = load_image("name.png")  # Charge l'image du nom
 
-# Button class
+# Classe de bouton
 class Button:
-    """Button class for interactive buttons."""
+    """Classe de bouton pour les boutons interactifs."""
     def __init__(self, x, y, normal_img, clicked_img, scale=1.0):
         """
-        Initialize a button.
+        Initialise un bouton.
         
         Args:
-            x (int): X-coordinate of the button's center
-            y (int): Y-coordinate of the button's center
-            normal_img (Surface): Image for normal state
-            clicked_img (Surface): Image for clicked state
-            scale (float): Scale factor for the button size (default: 1.0)
+            x (int): Coordonnée X du centre du bouton
+            y (int): Coordonnée Y du centre du bouton
+            normal_img (Surface): Image pour l'état normal
+            clicked_img (Surface): Image pour l'état cliqué
+            scale (float): Facteur d'échelle pour la taille du bouton (par défaut: 1.0)
         """
-        # Scale images if needed
+        # Redimensionne les images si nécessaire
         if scale != 1.0:
             orig_size = normal_img.get_size()
             new_size = (int(orig_size[0] * scale), int(orig_size[1] * scale))
@@ -76,10 +98,10 @@ class Button:
             self.normal_img = normal_img
             self.clicked_img = clicked_img
             
-        # Create a darkened version of the normal image for hover state
+        # Crée une version assombrie de l'image normale pour l'état de survol
         self.hover_img = self.normal_img.copy()
         dark_surface = pygame.Surface(self.hover_img.get_size(), pygame.SRCALPHA)
-        dark_surface.fill((0, 0, 0, settings.HOVER_DARKNESS))  # Semi-transparent black
+        dark_surface.fill((0, 0, 0, settings.HOVER_DARKNESS))  # Noir semi-transparent
         self.hover_img.blit(dark_surface, (0, 0))
         
         self.image = self.normal_img
@@ -89,22 +111,22 @@ class Button:
         
     def draw(self, surface):
         """
-        Draw the button on the given surface.
+        Dessine le bouton sur la surface donnée.
         
         Args:
-            surface (Surface): Surface to draw the button on
+            surface (Surface): Surface sur laquelle dessiner le bouton
         """
         surface.blit(self.image, self.rect)
         
     def check_click(self, pos):
         """
-        Check if the button is clicked.
+        Vérifie si le bouton est cliqué.
         
         Args:
-            pos (tuple): Mouse position (x, y)
+            pos (tuple): Position de la souris (x, y)
             
         Returns:
-            bool: True if button is clicked, False otherwise
+            bool: True si le bouton est cliqué, False sinon
         """
         if self.rect.collidepoint(pos):
             self.clicked = True
@@ -114,22 +136,22 @@ class Button:
     
     def check_hover(self, pos):
         """
-        Check if the button is being hovered over.
+        Vérifie si le bouton est survolé.
         
         Args:
-            pos (tuple): Mouse position (x, y)
+            pos (tuple): Position de la souris (x, y)
         """
         if self.rect.collidepoint(pos):
             self.hovered = True
-            if not self.clicked:  # Only show hover effect if not clicked
+            if not self.clicked:  # Affiche l'effet de survol uniquement si non cliqué
                 self.image = self.hover_img
         else:
             self.hovered = False
-            if not self.clicked:  # Only reset to normal if not clicked
+            if not self.clicked:  # Réinitialise à la normale uniquement si non cliqué
                 self.image = self.normal_img
     
     def release(self):
-        """Release the button when mouse button is released."""
+        """Relâche le bouton lorsque le bouton de la souris est relâché."""
         if self.clicked:
             self.clicked = False
             if self.hovered:
@@ -137,7 +159,7 @@ class Button:
             else:
                 self.image = self.normal_img
 
-# Create buttons using settings - all positions are now absolute from origin (0,0)
+# Crée des boutons en utilisant les paramètres - toutes les positions sont maintenant absolues depuis l'origine (0,0)
 play_button = Button(
     settings.PLAY_BUTTON_X_POSITION, 
     settings.PLAY_BUTTON_Y_POSITION, 
@@ -146,7 +168,7 @@ play_button = Button(
     scale=settings.PLAY_BUTTON_SCALE
 )
 
-# Options button with absolute positioning
+# Bouton d'options avec positionnement absolu
 options_button = Button(
     settings.OPTIONS_BUTTON_X_POSITION, 
     settings.OPTIONS_BUTTON_Y_POSITION, 
@@ -155,7 +177,7 @@ options_button = Button(
     scale=settings.OPTIONS_BUTTON_SCALE
 )
 
-# Exit button with absolute positioning
+# Bouton de sortie avec positionnement absolu
 exit_button = Button(
     settings.EXIT_BUTTON_X_POSITION, 
     settings.EXIT_BUTTON_Y_POSITION, 
@@ -164,7 +186,7 @@ exit_button = Button(
     scale=settings.EXIT_BUTTON_SCALE
 )
 
-# Border scaling and positioning using settings
+# Mise à l'échelle et positionnement de la bordure en utilisant les paramètres
 original_border_size = border_img.get_size()
 scaled_border_size = (
     int(original_border_size[0] * settings.BORDER_SCALE), 
@@ -175,7 +197,7 @@ border_rect = scaled_border_img.get_rect(
     center=(settings.BORDER_X_POSITION, settings.BORDER_Y_POSITION)
 )
 
-# Name image scaling and positioning using settings
+# Mise à l'échelle et positionnement de l'image du nom en utilisant les paramètres
 original_name_size = name_img.get_size()
 scaled_name_size = (
     int(original_name_size[0] * settings.NAME_SCALE), 
@@ -186,13 +208,9 @@ name_rect = scaled_name_img.get_rect(
     midbottom=(settings.NAME_X_POSITION, settings.NAME_Y_POSITION)
 )
 
-# Main game loop
-def main():
-    """Main game function."""
-    clock = pygame.time.Clock()
-    running = True
-    
-    # Initialize background music
+# Initialize background music
+def load_menu_music():
+    """Load and play the menu background music."""
     try:
         # Load and play background music
         bg_music_path = os.path.join(settings.ASSETS_DIR, "pixel-song.mp3")
@@ -204,6 +222,15 @@ def main():
             print(f"Warning: Background music file '{bg_music_path}' not found.")
     except pygame.error as e:
         print(f"Error loading background music: {e}")
+
+# Main game loop
+def main():
+    """Main game function."""
+    clock = pygame.time.Clock()
+    running = True
+    
+    # Initialize background music
+    load_menu_music()
     
     # Load sound effects for the main menu
     try:
@@ -253,6 +280,16 @@ def main():
     
     # Start with an initial screen flash when the game loads
     screen_flash.start()
+    
+    # Charger et initialiser la police pour le meilleur score
+    try:
+        highscore_font = pygame.font.SysFont("Arial", settings.HIGHSCORE_FONT_SIZE, bold=False)
+    except pygame.error as e:
+        print(f"Erreur lors du chargement de la police pour le meilleur score: {e}")
+        highscore_font = None
+    
+    # Charger le meilleur score
+    highscore = load_highscore()
     
     while running:
         # Calculate delta time
@@ -363,10 +400,13 @@ def main():
                             # Game returned to menu - reset menu state
                             title_scale = settings.TITLE_SCALE
                             
+                            # Actualiser le meilleur score après avoir joué
+                            highscore = load_highscore()
+                            
                             # Restart music when returning from game
                             try:
-                                pygame.mixer.music.rewind()
-                                pygame.mixer.music.play(-1)
+                                # Recharger complètement la musique du menu au lieu de juste la remettre
+                                load_menu_music()
                             except pygame.error as e:
                                 print(f"Error restarting music: {e}")
                         
@@ -468,6 +508,12 @@ def main():
                 
                 # Draw name image in foreground (last layer)
                 screen.blit(scaled_name_img, name_rect)
+                
+                # Afficher le meilleur score
+                if highscore_font:
+                    highscore_text = highscore_font.render(f"HIGHSCORE LOCAL: {highscore}", True, settings.WHITE)
+                    highscore_rect = highscore_text.get_rect(midtop=(settings.HIGHSCORE_X_POSITION, settings.HIGHSCORE_Y_POSITION))
+                    screen.blit(highscore_text, highscore_rect)
         
         # Draw pixel animation (should be after UI elements but before cursor)
         pixel_animation.draw(screen)

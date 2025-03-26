@@ -1,137 +1,158 @@
-# Game Settings
+# Paramètres du jeu
 
-# Screen dimensions
+# Dimensions de l'écran
 SCREEN_WIDTH = 940
 SCREEN_HEIGHT = 605
 
-# Window settings
-BORDERLESS_WINDOW = True  # Set to True for borderless window, False for normal window
+# Paramètres de la fenêtre
+BORDERLESS_WINDOW = True  # True pour une fenêtre sans bordure, False pour une fenêtre normale
 
-# Colors
+# Couleurs
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Assets directory (supports running from both root and sources directory)
+# Répertoire des ressources (fonctionne à la fois depuis le répertoire racine et le répertoire sources)
 import os
 ASSETS_DIR = "../assets" if os.path.basename(os.getcwd()) == "sources" else "assets"
 
-# Position settings - all positions are now x,y offsets from origin (0,0)
-# Title settings
-TITLE_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
-TITLE_Y_POSITION = 140
-TITLE_HOVER_SPEED = 3  # Speed of the hover animation
-TITLE_HOVER_AMPLITUDE = 10  # How far the title moves up and down
-TITLE_SCALE = 1.0  # Default scale
-TITLE_MAX_SCALE = 1.15  # Maximum scale when hovered
-TITLE_SCALE_SPEED = 0.01  # How fast the title scales up/down
+# Dossier pour sauvegarder les meilleurs scores
+HIGHSCORE_DIR = "../highscore" if os.path.basename(os.getcwd()) == "sources" else "highscore"
+HIGHSCORE_FILE = "score.txt"
 
-# Play button settings
-PLAY_BUTTON_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
-PLAY_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 - 20  # Slightly above center
+# Points par type de pixel
+WHITE_PIXEL_POINTS = 1    # Points pour chaque pixel blanc détruit
+ORANGE_PIXEL_POINTS = 3   # Points pour chaque pixel orange (jaune) détruit
+RED_PIXEL_BASE_POINTS = 5 # Points pour chaque pixel rouge touchant la base
+
+# Paramètres de position - toutes les positions sont des décalages x,y depuis l'origine (0,0)
+# Paramètres du titre
+TITLE_X_POSITION = SCREEN_WIDTH // 2  # Centré horizontalement
+TITLE_Y_POSITION = 140
+TITLE_HOVER_SPEED = 3  # Vitesse de l'animation de survol
+TITLE_HOVER_AMPLITUDE = 10  # Amplitude de mouvement du titre
+TITLE_SCALE = 1.0  # Échelle par défaut
+TITLE_MAX_SCALE = 1.15  # Échelle maximale lors du survol
+TITLE_SCALE_SPEED = 0.01  # Vitesse d'agrandissement/réduction du titre
+
+# Paramètres du score
+SCORE_FONT_SIZE = 36  # Taille de la police pour le score en jeu
+SCORE_FONT_BOLD = False  # Police sans gras pour le score en jeu
+SCORE_FONT_NAME = "Arial"  # Nom de la police pour le score en jeu
+SCORE_TEXT_COLOR = WHITE  # Couleur du texte du score en jeu
+SCORE_X_POSITION = SCREEN_WIDTH // 2  # Position X du score en jeu
+SCORE_Y_POSITION = 50  # Position Y du score en jeu
+SCORE_PREFIX = "SCORE: "  # Préfixe du score en jeu
+HIGHSCORE_FONT_SIZE = 15  # Taille de la police pour le meilleur score sur l'écran d'accueil
+HIGHSCORE_X_POSITION = SCREEN_WIDTH // 2  # Position X du meilleur score sur l'écran d'accueil (centré)
+HIGHSCORE_Y_POSITION = 25  # Position Y du meilleur score sur l'écran d'accueil
+
+# Paramètres du bouton Play
+PLAY_BUTTON_X_POSITION = SCREEN_WIDTH // 2  # Centré horizontalement
+PLAY_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 - 20  # Légèrement au-dessus du centre
 PLAY_BUTTON_SCALE = 0.40
 
-# Options button settings
-OPTIONS_BUTTON_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
-OPTIONS_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 + 90  # Below play button
+# Paramètres du bouton Options
+OPTIONS_BUTTON_X_POSITION = SCREEN_WIDTH // 2  # Centré horizontalement
+OPTIONS_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 + 90  # Sous le bouton Play
 OPTIONS_BUTTON_SCALE = 0.40
-BUTTON_SPACING_MULTIPLIER = 1.2  # Spacing between buttons as a multiplier of button height
+BUTTON_SPACING_MULTIPLIER = 1.2  # Espacement entre les boutons (multiplicateur de la hauteur du bouton)
 
-# Exit button settings
-EXIT_BUTTON_X_POSITION = SCREEN_WIDTH // 2 - 3  # Slightly left of center
-EXIT_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 + 200  # Far below center
+# Paramètres du bouton Exit
+EXIT_BUTTON_X_POSITION = SCREEN_WIDTH // 2 - 3  # Légèrement à gauche du centre
+EXIT_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 + 200  # Loin en dessous du centre
 EXIT_BUTTON_SCALE = 0.18
 
-# Border settings
-BORDER_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
-BORDER_Y_POSITION = SCREEN_HEIGHT // 2  # Centered vertically
+# Paramètres de la bordure
+BORDER_X_POSITION = SCREEN_WIDTH // 2  # Centré horizontalement
+BORDER_Y_POSITION = SCREEN_HEIGHT // 2  # Centré verticalement
 BORDER_SCALE = 2.9
 
-# Name image settings
-NAME_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
-NAME_Y_POSITION = SCREEN_HEIGHT - 30  # Bottom of the screen with padding
+# Paramètres de l'image du nom
+NAME_X_POSITION = SCREEN_WIDTH // 2  # Centré horizontalement
+NAME_Y_POSITION = SCREEN_HEIGHT - 30  # Bas de l'écran avec rembourrage
 NAME_SCALE = 0.5
 
-# Game exit button settings
-GAME_EXIT_ICON_X_POSITION = SCREEN_WIDTH // 2  # Centered horizontally
-GAME_EXIT_ICON_Y_POSITION = SCREEN_HEIGHT - 30  # Bottom with padding
+# Paramètres du bouton de sortie du jeu
+GAME_EXIT_ICON_X_POSITION = SCREEN_WIDTH // 2  # Centré horizontalement
+GAME_EXIT_ICON_Y_POSITION = SCREEN_HEIGHT - 30  # Bas avec rembourrage
 GAME_EXIT_ICON_SCALE = 0.125
 
-# Heart settings
-HEART_X_POSITION = SCREEN_WIDTH // 2  # Center of screen horizontally
-HEART_Y_POSITION = SCREEN_HEIGHT // 2  # Center of screen vertically
-HEART_SCALE = 0.1  # Scale for heart image
-HEART_BASE_SCALE = 1.3  # Scale for the base under the heart
-INITIAL_LIVES = 5  # Player starts with 5 lives
+# Paramètres du cœur
+HEART_X_POSITION = SCREEN_WIDTH // 2  # Centre de l'écran horizontalement
+HEART_Y_POSITION = SCREEN_HEIGHT // 2  # Centre de l'écran verticalement
+HEART_SCALE = 0.1  # Échelle pour l'image du cœur
+HEART_BASE_SCALE = 1.3  # Échelle pour la base sous le cœur
+INITIAL_LIVES = 5  # Le joueur commence avec 5 vies
 
-# Cursor settings
+# Paramètres du curseur
 CURSOR_NORMAL = "cursor_normal.png"
 CURSOR_HOVER = "cursor_hovering_selectable_item.png"
 CURSOR_CLICK = "cursor_click.png"
-CURSOR_ZOOM = "cursor_zoom.png"  # New zoom cursor for title hover
-CURSOR_VISIBLE = False  # Hide the default system cursor
+CURSOR_ZOOM = "cursor_zoom.png"  # Nouveau curseur de zoom pour le survol du titre
+CURSOR_VISIBLE = False  # Masquer le curseur système par défaut
 
-# Cursor scaling settings
+# Paramètres d'échelle du curseur
 CURSOR_NORMAL_SCALE = 0.7
 CURSOR_HOVER_SCALE = 0.7
 CURSOR_CLICK_SCALE = 0.7
 CURSOR_ZOOM_SCALE = 0.7
 
-# Button hover effect
-HOVER_DARKNESS = 50  # 0-255, higher is darker
+# Effet de survol des boutons
+HOVER_DARKNESS = 50  # 0-255, plus élevé est plus sombre
 
-# Animation settings
-FPS = 60  # Frames per second
+# Paramètres d'animation
+FPS = 60  # Images par seconde
 
-# Pixel animation settings
+# Paramètres d'animation des pixels
 PIXEL_MIN_SIZE = 2
 PIXEL_MAX_SIZE = 4
 PIXEL_MIN_COUNT = 5
 PIXEL_MAX_COUNT = 15
-PIXEL_MIN_INTERVAL = 1.0  # Minimum seconds between random animations
-PIXEL_MAX_INTERVAL = 5.0  # Maximum seconds between random animations
+PIXEL_MIN_INTERVAL = 1.0  # Intervalle minimum en secondes entre les animations aléatoires
+PIXEL_MAX_INTERVAL = 5.0  # Intervalle maximum en secondes entre les animations aléatoires
 PIXEL_CLICK_COUNT = 10
-PIXEL_BUTTON_HOVER_COUNT = 5  # Number of particles to spawn when hovering over buttons
-PIXEL_GRAVITY = 2.0      # Gravity strength (0 = no gravity, higher values = stronger gravity)
+PIXEL_BUTTON_HOVER_COUNT = 5  # Nombre de particules à générer lors du survol des boutons
+PIXEL_GRAVITY = 2.0      # Force de gravité (0 = pas de gravité, valeurs plus élevées = gravité plus forte)
 
-# Transition animation settings
-TRANSITION_GRAVITY = 8.0       # Gravity strength for transition animation (increased for faster falling)
-TRANSITION_MIN_ANGLE = -45     # Minimum angle in degrees for transition elements (wider angle range)
-TRANSITION_MAX_ANGLE = 45      # Maximum angle in degrees for transition elements (wider angle range)
-TRANSITION_MIN_SPEED = 100     # Minimum initial speed for transition elements (increased)
-TRANSITION_MAX_SPEED = 250     # Maximum initial speed for transition elements (increased)
-TRANSITION_ROTATION_SPEED = 3.0  # Rotation speed factor for transition elements (increased)
-TRANSITION_DURATION = 3.0      # Maximum duration of transition animation in seconds (safety timeout)
+# Paramètres d'animation de transition
+TRANSITION_GRAVITY = 8.0       # Force de gravité pour l'animation de transition (augmentée pour une chute plus rapide)
+TRANSITION_MIN_ANGLE = -45     # Angle minimum en degrés pour les éléments de transition (plage d'angle plus large)
+TRANSITION_MAX_ANGLE = 45      # Angle maximum en degrés pour les éléments de transition (plage d'angle plus large)
+TRANSITION_MIN_SPEED = 100     # Vitesse initiale minimale pour les éléments de transition (augmentée)
+TRANSITION_MAX_SPEED = 250     # Vitesse initiale maximale pour les éléments de transition (augmentée)
+TRANSITION_ROTATION_SPEED = 3.0  # Facteur de vitesse de rotation pour les éléments de transition (augmenté)
+TRANSITION_DURATION = 3.0      # Durée maximale de l'animation de transition en secondes (délai de sécurité)
 
-# Screen flash animation settings
-FLASH_DURATION = 1          # Duration of screen flash animation in seconds
+# Paramètres d'animation du flash d'écran
+FLASH_DURATION = 1          # Durée de l'animation du flash d'écran en secondes
 FLASH_FADE_SPEED = 1.5
 
-# Game Pixel settings
-GAME_PIXEL_MIN_SIZE = 10   # Minimum size of game pixels
-GAME_PIXEL_MAX_SIZE = 35  # Maximum size of game pixels
-GAME_PIXEL_BASE_SPEED = 15  # Base speed of pixels
-GAME_PIXEL_ACCELERATION = 3.0  # Exponential acceleration factor (increased for more dramatic effect)
-GAME_PIXEL_PROXIMITY_THRESHOLD = 400  # Distance at which pixels start accelerating
+# Paramètres des pixels du jeu
+GAME_PIXEL_MIN_SIZE = 10   # Taille minimale des pixels du jeu
+GAME_PIXEL_MAX_SIZE = 35  # Taille maximale des pixels du jeu
+GAME_PIXEL_BASE_SPEED = 15  # Vitesse de base des pixels
+GAME_PIXEL_ACCELERATION = 3.0  # Facteur d'accélération exponentielle (augmenté pour un effet plus dramatique)
+GAME_PIXEL_PROXIMITY_THRESHOLD = 400  # Distance à laquelle les pixels commencent à accélérer
 
-# Spawn settings
-GAME_PIXEL_SPAWN_INTERVAL = 3.0  # Initial seconds between spawns
-GAME_PIXEL_SPAWN_DECREASE_RATE = 0.015  # How much spawn interval decreases per second
-GAME_PIXEL_SPAWN_MIN_INTERVAL = 0.5  # Minimum spawn interval
-GAME_PIXEL_SPEED_INCREASE_RATE = 0.025  # How much base speed increases per second
+# Paramètres d'apparition
+GAME_PIXEL_SPAWN_INTERVAL = 3.0  # Intervalle initial en secondes entre les apparitions
+GAME_PIXEL_SPAWN_DECREASE_RATE = 0.015  # Diminution de l'intervalle d'apparition par seconde
+GAME_PIXEL_SPAWN_MIN_INTERVAL = 0.5  # Intervalle d'apparition minimum
+GAME_PIXEL_SPEED_INCREASE_RATE = 0.025  # Augmentation de la vitesse de base par seconde
 
-# Special pixel spawn odds (percentage)
-RED_PIXEL_ODDS = 10  # 10% chance for a red pixel
-GREEN_PIXEL_ODDS = 2.5  # 15% chance for a green pixel
-ORANGE_PIXEL_ODDS = 10  # 20% chance for an orange pixel
+# Probabilités d'apparition des pixels spéciaux (pourcentage)
+RED_PIXEL_ODDS = 10  # 10% de chance pour un pixel rouge
+GREEN_PIXEL_ODDS = 2.5  # 2.5% de chance pour un pixel vert
+ORANGE_PIXEL_ODDS = 10  # 10% de chance pour un pixel orange
 
-# Orange pixel settings
-ORANGE_SPLASH_RADIUS = 150  # Radius in which orange pixel spawns white pixels
-ORANGE_SPLASH_COUNT = 3  # Number of white pixels spawned by orange pixel
+# Paramètres des pixels orange
+ORANGE_SPLASH_RADIUS = 150  # Rayon dans lequel le pixel orange génère des pixels blancs
+ORANGE_SPLASH_COUNT = 3  # Nombre de pixels blancs générés par le pixel orange
 
-# Sound settings
-MUSIC_VOLUME = 0.4  # Volume for background music (0.0 to 1.0)
-SFX_VOLUME = 0.5    # Volume for sound effects (0.0 to 1.0)
-EXPLOSION_VOLUME = 0.4  # Volume for explosion sounds
-COLLECT_VOLUME = 0.5    # Volume for collect sounds
-DEATH_VOLUME = 0.6      # Volume for death sounds
-GAME_OVER_VOLUME = 0.7  # Volume for game over sound (slightly louder than death sound)
+# Paramètres sonores
+MUSIC_VOLUME = 0.4  # Volume de la musique de fond (0.0 à 1.0)
+SFX_VOLUME = 0.5    # Volume des effets sonores (0.0 à 1.0)
+EXPLOSION_VOLUME = 0.4  # Volume des sons d'explosion
+COLLECT_VOLUME = 0.5    # Volume des sons de collecte
+DEATH_VOLUME = 0.6      # Volume des sons de mort
+GAME_OVER_VOLUME = 0.7  # Volume du son de fin de jeu (légèrement plus fort que le son de mort)
