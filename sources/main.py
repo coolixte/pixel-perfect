@@ -308,37 +308,37 @@ def main():
             
             # If transition is no longer active
             if not still_active:
-                in_transition = False
-                # Check if all elements have exited the screen
+                # Check if all elements have exited the screen - immediately start the flash and scene change
                 if transition_animation.all_elements_exited_screen():
-                    waiting_for_elements_exit = True
-                    # Trigger the screen flash when elements have exited
+                    # Start the screen flash immediately
                     screen_flash.start()
-                
-        # If waiting for elements to exit, handle scene change
-        if waiting_for_elements_exit and not screen_flash.active:
-            waiting_for_elements_exit = False
-            if next_scene == "play":
-                print("Transitioning to Play scene")
-                # Launch the game - we want game elements to appear after the white flash
-                game_result = game.start(screen)
-                if not game_result:
-                    running = False  # Exit the game if game returns False
-                else:
-                    # Game returned to menu - just reset menu state
-                    # Don't do any extra transitions here since the game handles its own exit animation
-                    # The game exit animation is already showing the white flash
-                    title_scale = settings.TITLE_SCALE
-            elif next_scene == "options":
-                print("Transitioning to Options scene")
-                # You would launch your options menu here
-                # import options
-                # options.start()
-            elif next_scene == "exit":
-                print("Exiting game")
-                running = False  # Exit the game
-            
-            next_scene = None
+                    
+                    # Handle scene change immediately during the flash
+                    if next_scene == "play":
+                        print("Transitioning to Play scene")
+                        in_transition = False
+                        # Launch the game immediately - we want game elements to appear during the white flash
+                        game_result = game.start(screen, skip_entry_flash=True)  # Tell game to skip its own entry flash
+                        if not game_result:
+                            running = False  # Exit the game if game returns False
+                        else:
+                            # Game returned to menu - reset menu state
+                            title_scale = settings.TITLE_SCALE
+                            
+                    elif next_scene == "options":
+                        print("Transitioning to Options scene")
+                        in_transition = False
+                        # You would launch your options menu here
+                        # import options
+                        # options.start(skip_entry_flash=True)
+                        
+                    elif next_scene == "exit":
+                        print("Exiting game")
+                        # End the game immediately when white flash starts on exit button press
+                        running = False
+                        
+                    next_scene = None
+                    in_transition = False
         
         # Only check button hover states if not in transition
         if not in_transition and not waiting_for_elements_exit:
@@ -401,25 +401,26 @@ def main():
         # Draw
         screen.fill(settings.BLACK)
         
-        # Draw border as background (first layer)
+        # Draw border as background (first layer) - always draw the border
         screen.blit(scaled_border_img, border_rect)
         
         # Draw UI elements or transition animation
         if in_transition:
-            # If in transition, only draw the border and transition elements
+            # If in transition, draw the border and transition elements
             transition_animation.draw(screen)
-        elif not waiting_for_elements_exit:
-            # Draw regular UI if not in transition
-            # Draw title with hover effect
-            screen.blit(scaled_title, title_rect)
-            
-            # Draw buttons
-            play_button.draw(screen)
-            options_button.draw(screen)
-            exit_button.draw(screen)
-            
-            # Draw name image in foreground (last layer)
-            screen.blit(scaled_name_img, name_rect)
+        else:
+            # Draw regular UI if not in transition and not waiting for elements exit
+            if not waiting_for_elements_exit:
+                # Draw title with hover effect
+                screen.blit(scaled_title, title_rect)
+                
+                # Draw buttons
+                play_button.draw(screen)
+                options_button.draw(screen)
+                exit_button.draw(screen)
+                
+                # Draw name image in foreground (last layer)
+                screen.blit(scaled_name_img, name_rect)
         
         # Draw pixel animation (should be after UI elements but before cursor)
         pixel_animation.draw(screen)

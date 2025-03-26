@@ -157,19 +157,20 @@ class GamePixel:
 
 class Game:
     """Main game class that manages the game state and logic."""
-    def __init__(self, screen):
+    def __init__(self, screen, skip_entry_flash=False):
         """
         Initialize the game.
         
         Args:
             screen (Surface): Pygame surface to draw on
+            skip_entry_flash (bool): If True, skip the initial fade in effect
         """
         self.screen = screen
         self.running = True
         self.return_to_menu = False  # Flag to indicate whether to return to menu
         
         # Fade in state
-        self.fading_in = True
+        self.fading_in = skip_entry_flash
         self.fade_timer = 0
         self.fade_duration = settings.FLASH_DURATION  # Reuse flash duration
         
@@ -502,7 +503,13 @@ class Game:
             # First phase: elements fall off screen
             if self.exit_timer < settings.TRANSITION_DURATION:
                 # Update transition animation
-                self.exit_transition.update(dt)
+                still_active = self.exit_transition.update(dt)
+                
+                # If transition is complete, immediately start the white flash
+                if not still_active and self.exit_transition.all_elements_exited_screen():
+                    # Skip to the flash phase
+                    self.exit_timer = settings.TRANSITION_DURATION
+                    self.exit_fade_timer = 0
                 
                 # Update cursor
                 mouse_pos = pygame.mouse.get_pos()
@@ -518,8 +525,8 @@ class Game:
             elif self.exit_timer >= settings.TRANSITION_DURATION and self.exit_fade_timer < settings.FLASH_DURATION:
                 self.exit_fade_timer += dt
                 
-                # After flash is done, return to menu
-                if self.exit_fade_timer >= settings.FLASH_DURATION:
+                # Return to menu immediately when the flash starts
+                if self.exit_fade_timer < 0.05:  # Just started the flash
                     self.return_to_menu = True
                     self.running = False
                 
@@ -597,13 +604,13 @@ class Game:
         # Clear the screen
         self.screen.fill(settings.BLACK)
         
+        # Always draw the border as background first
+        if hasattr(self, 'scaled_border_img') and self.scaled_border_img is not None:
+            self.screen.blit(self.scaled_border_img, self.border_rect)
+        
         if self.exiting:
             # During exit transition, first phase: elements falling
             if self.exit_timer < settings.TRANSITION_DURATION:
-                # Draw border as background
-                if hasattr(self, 'scaled_border_img') and self.scaled_border_img is not None:
-                    self.screen.blit(self.scaled_border_img, self.border_rect)
-                    
                 # Draw transition elements
                 self.exit_transition.draw(self.screen)
                 
@@ -626,10 +633,6 @@ class Game:
             return
         
         # Normal game rendering
-        # Draw border as background (first layer)
-        if hasattr(self, 'scaled_border_img') and self.scaled_border_img is not None:
-            self.screen.blit(self.scaled_border_img, self.border_rect)
-        
         # Draw all game elements - they will be visible through the white flash
         # Draw all pixels
         for pixel in self.pixels:
@@ -685,17 +688,18 @@ class Game:
             
         return self.running
 
-def start(screen):
+def start(screen, skip_entry_flash=False):
     """
     Start the game.
     
     Args:
         screen (Surface): Pygame surface to draw on
+        skip_entry_flash (bool): If True, skip the initial fade in effect
         
     Returns:
         bool: True if game should return to menu, False if should exit
     """
-    game = Game(screen)
+    game = Game(screen, skip_entry_flash)
     result = game.run()
     
     # If game ended due to return_to_menu flag, always return True
