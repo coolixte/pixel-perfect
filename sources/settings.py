@@ -127,3 +127,11 @@ ORANGE_PIXEL_ODDS = 10  # 20% chance for an orange pixel
 # Orange pixel settings
 ORANGE_SPLASH_RADIUS = 150  # Radius in which orange pixel spawns white pixels
 ORANGE_SPLASH_COUNT = 3  # Number of white pixels spawned by orange pixel
+
+# Sound settings
+MUSIC_VOLUME = 0.4  # Volume for background music (0.0 to 1.0)
+SFX_VOLUME = 0.5    # Volume for sound effects (0.0 to 1.0)
+EXPLOSION_VOLUME = 0.4  # Volume for explosion sounds
+COLLECT_VOLUME = 0.5    # Volume for collect sounds
+DEATH_VOLUME = 0.6      # Volume for death sounds
+GAME_OVER_VOLUME = 0.7  # Volume for game over sound (slightly louder than death sound)

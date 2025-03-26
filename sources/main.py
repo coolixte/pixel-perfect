@@ -198,7 +198,7 @@ def main():
         bg_music_path = os.path.join(settings.ASSETS_DIR, "pixel-song.mp3")
         if os.path.exists(bg_music_path):
             pygame.mixer.music.load(bg_music_path)
-            pygame.mixer.music.set_volume(0.5)  # Set volume to 50%
+            pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Use the setting value
             pygame.mixer.music.play(-1)  # -1 means loop indefinitely
         else:
             print(f"Warning: Background music file '{bg_music_path}' not found.")
@@ -210,7 +210,7 @@ def main():
         explode_sound_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
         if os.path.exists(explode_sound_path):
             explode_sound = pygame.mixer.Sound(explode_sound_path)
-            explode_sound.set_volume(0.4)
+            explode_sound.set_volume(settings.EXPLOSION_VOLUME)  # Use the setting value
         else:
             print(f"Warning: Sound file '{explode_sound_path}' not found.")
             explode_sound = None
@@ -284,11 +284,11 @@ def main():
                 if event.button == 1:  # Left mouse button
                     # Only check button clicks if not in transition
                     if not in_transition and not waiting_for_elements_exit:
-                        # Play click sound
+                        # Play click sound for any click on the menu
                         if explode_sound:
                             explode_sound.play()
                         
-                        # Spawn particles at click position
+                        # Spawn particles at click position - allow particles anywhere on menu screen
                         pixel_animation.spawn_particles(event.pos[0], event.pos[1])
                         
                         if play_button.check_click(event.pos):
@@ -319,7 +319,7 @@ def main():
                             transition_animation.start(ui_elements, "options")
                             in_transition = True
                             next_scene = "options"
-                            
+                        
                         elif exit_button.check_click(event.pos):
                             # Start transition animation
                             ui_elements = [

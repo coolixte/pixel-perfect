@@ -254,6 +254,7 @@ class Game:
         self.screen = screen
         self.running = True
         self.return_to_menu = False  # Flag to indicate whether to return to menu
+        self.game_over_pending = False  # Flag to track delayed game over transition
         
         # Fade in state
         self.fading_in = skip_entry_flash
@@ -390,13 +391,14 @@ class Game:
         self.explode_sound = None
         self.death_sound = None
         self.collect_sound = None
+        self.game_over_sound = None
         
         try:
             # Load explode sound
             explode_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
             if os.path.exists(explode_path):
                 self.explode_sound = pygame.mixer.Sound(explode_path)
-                self.explode_sound.set_volume(0.4)
+                self.explode_sound.set_volume(settings.EXPLOSION_VOLUME)
             else:
                 print(f"Warning: Sound file '{explode_path}' not found.")
             
@@ -404,7 +406,7 @@ class Game:
             death_path = os.path.join(settings.ASSETS_DIR, "death.mp3")
             if os.path.exists(death_path):
                 self.death_sound = pygame.mixer.Sound(death_path)
-                self.death_sound.set_volume(0.5)
+                self.death_sound.set_volume(settings.DEATH_VOLUME)
             else:
                 print(f"Warning: Sound file '{death_path}' not found.")
                 
@@ -412,9 +414,17 @@ class Game:
             collect_path = os.path.join(settings.ASSETS_DIR, "collect.mp3")
             if os.path.exists(collect_path):
                 self.collect_sound = pygame.mixer.Sound(collect_path)
-                self.collect_sound.set_volume(0.4)
+                self.collect_sound.set_volume(settings.COLLECT_VOLUME)
             else:
                 print(f"Warning: Sound file '{collect_path}' not found.")
+            
+            # Load game-over sound
+            game_over_path = os.path.join(settings.ASSETS_DIR, "game-over.mp3")
+            if os.path.exists(game_over_path):
+                self.game_over_sound = pygame.mixer.Sound(game_over_path)
+                self.game_over_sound.set_volume(settings.GAME_OVER_VOLUME)  # Use the dedicated game over volume
+            else:
+                print(f"Warning: Sound file '{game_over_path}' not found.")
                 
         except pygame.error as e:
             print(f"Error loading sound effects: {e}")
@@ -429,7 +439,7 @@ class Game:
             bg_music_path = os.path.join(settings.ASSETS_DIR, "game-song.mp3")
             if os.path.exists(bg_music_path):
                 pygame.mixer.music.load(bg_music_path)
-                pygame.mixer.music.set_volume(0.4)  # Set volume to 40%
+                pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Use the setting value
                 pygame.mixer.music.play(-1)  # -1 means loop indefinitely
             else:
                 print(f"Warning: Game background music file '{bg_music_path}' not found.")
@@ -576,7 +586,8 @@ class Game:
         if self.lives <= 0:
             self.lives = 0
             print("Game Over!")
-            # For now, we'll keep the game running
+            # Start the game over transition
+            self.trigger_game_over(from_red_pixel=False)
             
         # Update heart image (heart_1.png to heart_5.png based on damage)
         damage_level = 5 - self.lives
@@ -613,6 +624,31 @@ class Game:
                 damage_level = 5 - self.lives
                 self.heart_image = self.heart_images[damage_level - 1]
     
+    def trigger_game_over(self, from_red_pixel=False):
+        """
+        Trigger game over sequence with transition animation back to menu.
+        
+        Args:
+            from_red_pixel (bool): Whether game over was triggered by clicking a red pixel
+        """
+        # Play game over sound
+        if hasattr(self, 'game_over_sound') and self.game_over_sound:
+            self.game_over_sound.play()
+            
+        # Create particle effects at the heart position
+        # Use more particles if triggered by red pixel for a more dramatic effect
+        particle_count = 40 if from_red_pixel else 30
+        particle_spread = 40 if from_red_pixel else 30
+        
+        for _ in range(particle_count):
+            particle_x = settings.HEART_X_POSITION + random.uniform(-particle_spread, particle_spread)
+            particle_y = settings.HEART_Y_POSITION + random.uniform(-particle_spread, particle_spread)
+            self.pixel_animation.spawn_particles(particle_x, particle_y, color="red")
+            
+        # Start exit transition after a short delay to let the player see the game over state
+        pygame.time.set_timer(pygame.USEREVENT, 1500)  # 1.5 second delay
+        self.game_over_pending = True
+    
     def handle_events(self):
         """Handle game events."""
         # If in exiting state, don't process any events
@@ -628,6 +664,13 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
                 return False
+                
+            # Check for delayed game over transition
+            elif event.type == pygame.USEREVENT:
+                if hasattr(self, 'game_over_pending') and self.game_over_pending:
+                    pygame.time.set_timer(pygame.USEREVENT, 0)  # Cancel the timer
+                    self.game_over_pending = False
+                    self.start_exit_transition()
                 
             elif event.type == pygame.MOUSEMOTION:
                 # Check if mouse is inside the window
@@ -653,24 +696,29 @@ class Game:
                     
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left mouse button
-                    # Play explode sound for any click
-                    if hasattr(self, 'explode_sound') and self.explode_sound:
-                        self.explode_sound.play()
+                    # Check if we clicked on an interactive element
+                    clicked_on_interactive = False
+                    clicked_pixel = None  # Initialize clicked_pixel to avoid UnboundLocalError
                     
                     # Check if exit button was clicked
                     if hasattr(self, 'exit_rect') and self.exit_rect and self.exit_rect.collidepoint(event.pos):
+                        clicked_on_interactive = True
                         self.exit_clicked = True
                         self.exit_image = self.exit_click
                         # Don't return immediately, let the button click be visible
                     else:
                         # Check for pixel clicks
-                        clicked_pixel = None
                         for pixel in self.pixels:
                             if pixel.check_click(event.pos):
                                 clicked_pixel = pixel
+                                clicked_on_interactive = True
                                 break
                                 
                         if clicked_pixel:
+                            # Play explode sound for pixel clicks
+                            if hasattr(self, 'explode_sound') and self.explode_sound:
+                                self.explode_sound.play()
+                                
                             if clicked_pixel.type == "white":
                                 # White pixel: destroy and create animation
                                 clicked_pixel.mark_as_dead()
@@ -679,9 +727,14 @@ class Game:
                             elif clicked_pixel.type == "red":
                                 # Red pixel: game over
                                 print("Red pixel clicked! Game Over!")
-                                self.lives = 0
+                                self.lives = 0  # Set lives to 0
                                 self.heart_image = self.heart_images[4]  # Most damaged heart
-                                self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="red")
+                                # Create a larger red explosion effect
+                                self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="red", count=20)
+                                # Remove the clicked pixel
+                                clicked_pixel.mark_as_dead()
+                                # Trigger the game over sequence
+                                self.trigger_game_over(from_red_pixel=True)
                                 
                             elif clicked_pixel.type == "green":
                                 # Green pixel: power-up and pop all white and orange pixels
@@ -705,6 +758,10 @@ class Game:
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="orange")
                                 self.spawn_orange_splash(clicked_pixel.x, clicked_pixel.y)
                                 clicked_pixel.mark_as_dead()
+                    
+                    # If clicked on an interactive element like a button or pixel, play explode sound
+                    if clicked_on_interactive and not clicked_pixel and hasattr(self, 'explode_sound') and self.explode_sound:
+                        self.explode_sound.play()
             
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:  # Left mouse button release
