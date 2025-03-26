@@ -40,11 +40,16 @@ SCORE_FONT_BOLD = False  # Police sans gras pour le score en jeu
 SCORE_FONT_NAME = "Arial"  # Nom de la police pour le score en jeu
 SCORE_TEXT_COLOR = WHITE  # Couleur du texte du score en jeu
 SCORE_X_POSITION = SCREEN_WIDTH // 2  # Position X du score en jeu
-SCORE_Y_POSITION = 50  # Position Y du score en jeu
+SCORE_Y_POSITION = 40  # Position Y du score en jeu
 SCORE_PREFIX = "SCORE: "  # Préfixe du score en jeu
 HIGHSCORE_FONT_SIZE = 15  # Taille de la police pour le meilleur score sur l'écran d'accueil
-HIGHSCORE_X_POSITION = SCREEN_WIDTH // 2  # Position X du meilleur score sur l'écran d'accueil (centré)
-HIGHSCORE_Y_POSITION = 25  # Position Y du meilleur score sur l'écran d'accueil
+HIGHSCORE_X_POSITION = SCREEN_WIDTH // 2 + 10 # Position X du meilleur score sur l'écran d'accueil (centré)
+HIGHSCORE_Y_POSITION = 30  # Position Y du meilleur score sur l'écran d'accueil
+
+# Paramètres de la couronne à côté du meilleur score
+CROWN_SCALE = 1.8  # Échelle de l'image de la couronne
+CROWN_SPACING = -8  # Espacement entre le texte du meilleur score et la couronne (en pixels)
+CROWN_Y_OFFSET = 0  # Décalage vertical de la couronne par rapport au texte (négatif = vers le haut)
 
 # Paramètres du bouton Play
 PLAY_BUTTON_X_POSITION = SCREEN_WIDTH // 2  # Centré horizontalement
@@ -89,6 +94,7 @@ CURSOR_NORMAL = "cursor_normal.png"
 CURSOR_HOVER = "cursor_hovering_selectable_item.png"
 CURSOR_CLICK = "cursor_click.png"
 CURSOR_ZOOM = "cursor_zoom.png"  # Nouveau curseur de zoom pour le survol du titre
+CURSOR_PAINT = "cursor_paint.png"  # Curseur pour le mode jeu
 CURSOR_VISIBLE = False  # Masquer le curseur système par défaut
 
 # Paramètres d'échelle du curseur
@@ -96,6 +102,7 @@ CURSOR_NORMAL_SCALE = 0.7
 CURSOR_HOVER_SCALE = 0.7
 CURSOR_CLICK_SCALE = 0.7
 CURSOR_ZOOM_SCALE = 0.7
+CURSOR_PAINT_SCALE = 0.7
 
 # Effet de survol des boutons
 HOVER_DARKNESS = 50  # 0-255, plus élevé est plus sombre
@@ -128,8 +135,8 @@ FLASH_DURATION = 1          # Durée de l'animation du flash d'écran en seconde
 FLASH_FADE_SPEED = 1.5
 
 # Paramètres des pixels du jeu
-GAME_PIXEL_MIN_SIZE = 10   # Taille minimale des pixels du jeu
-GAME_PIXEL_MAX_SIZE = 35  # Taille maximale des pixels du jeu
+GAME_PIXEL_MIN_SIZE = 17   # Taille minimale des pixels du jeu
+GAME_PIXEL_MAX_SIZE = 45  # Taille maximale des pixels du jeu
 GAME_PIXEL_BASE_SPEED = 15  # Vitesse de base des pixels
 GAME_PIXEL_ACCELERATION = 3.0  # Facteur d'accélération exponentielle (augmenté pour un effet plus dramatique)
 GAME_PIXEL_PROXIMITY_THRESHOLD = 400  # Distance à laquelle les pixels commencent à accélérer

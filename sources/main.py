@@ -73,6 +73,7 @@ exit_btn = load_image("ExitBtn.png")
 exit_click = load_image("ExitClick.png")
 border_img = load_image("fullborder.png")
 name_img = load_image("name.png")  # Charge l'image du nom
+crown_img = load_image("Crown.gif")  # Charge l'image de la couronne
 
 # Classe de bouton
 class Button:
@@ -207,6 +208,14 @@ scaled_name_img = pygame.transform.scale(name_img, scaled_name_size)
 name_rect = scaled_name_img.get_rect(
     midbottom=(settings.NAME_X_POSITION, settings.NAME_Y_POSITION)
 )
+
+# Mise à l'échelle de l'image de la couronne
+original_crown_size = crown_img.get_size()
+scaled_crown_size = (
+    int(original_crown_size[0] * settings.CROWN_SCALE),
+    int(original_crown_size[1] * settings.CROWN_SCALE)
+)
+scaled_crown_img = pygame.transform.scale(crown_img, scaled_crown_size)
 
 # Initialize background music
 def load_menu_music():
@@ -513,6 +522,15 @@ def main():
                 if highscore_font:
                     highscore_text = highscore_font.render(f"HIGHSCORE LOCAL: {highscore}", True, settings.WHITE)
                     highscore_rect = highscore_text.get_rect(midtop=(settings.HIGHSCORE_X_POSITION, settings.HIGHSCORE_Y_POSITION))
+                    
+                    # Afficher la couronne à gauche du texte du meilleur score
+                    crown_rect = scaled_crown_img.get_rect(
+                        midright=(highscore_rect.left - settings.CROWN_SPACING,
+                                 highscore_rect.centery + settings.CROWN_Y_OFFSET)
+                    )
+                    screen.blit(scaled_crown_img, crown_rect)
+                    
+                    # Afficher le texte du highscore après la couronne
                     screen.blit(highscore_text, highscore_rect)
         
         # Draw pixel animation (should be after UI elements but before cursor)

@@ -812,6 +812,8 @@ class Game:
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="red", count=20)
                                 # Remove the clicked pixel
                                 clicked_pixel.mark_as_dead()
+                                # Ajouter des points pour avoir cliqué sur un pixel rouge
+                                self.add_score(settings.RED_PIXEL_BASE_POINTS)
                                 # Trigger the game over sequence
                                 self.trigger_game_over(from_red_pixel=True)
                                 
@@ -941,7 +943,8 @@ class Game:
                     pygame.mouse.get_pressed(), 
                     hovering_button=False,
                     hovering_title=False,
-                    mouse_in_window=self.mouse_in_window
+                    mouse_in_window=self.mouse_in_window,
+                    game_mode=True
                 )
                 
             # Second phase: white flash
@@ -973,7 +976,8 @@ class Game:
             pygame.mouse.get_pressed(), 
             hovering_button=hasattr(self, 'exit_rect') and self.exit_rect and self.exit_rect.collidepoint(mouse_pos),
             hovering_title=False,
-            mouse_in_window=self.mouse_in_window
+            mouse_in_window=self.mouse_in_window,
+            game_mode=True
         )
         
         # Don't update game state during fade-in
@@ -1021,18 +1025,22 @@ class Game:
             # Check for collision with heart/base
             if pixel.check_collision(collision_rect) and not pixel.is_blinking:
                 # Start blinking effect instead of removing immediately
-                pixel.start_blinking()
-                
-                if pixel.type == "white" or pixel.type == "orange":
-                    # Mark pixel as one that will damage the heart when it finishes blinking
-                    pixel.will_damage_heart = True
-                elif pixel.type == "green":
-                    # Mark pixel as one that will apply a powerup when it finishes blinking
-                    pixel.will_apply_powerup = True
-                elif pixel.type == "red":
-                    # Si un pixel rouge touche la base, ajouter 5 points 
-                    self.add_score(settings.RED_PIXEL_BASE_POINTS)
+                if pixel.type == "green":
+                    # Green pixels should pop immediately without sound or blinking
+                    self.apply_powerup()
+                    pixels_to_remove.append(i)
+                    # Create a particle effect without sound
+                    self.pixel_animation.spawn_particles(pixel.x, pixel.y, color="green")
+                else:
+                    pixel.start_blinking()
                     
+                    if pixel.type == "white" or pixel.type == "orange":
+                        # Mark pixel as one that will damage the heart when it finishes blinking
+                        pixel.will_damage_heart = True
+                    elif pixel.type == "red":
+                        # Les pixels rouges ne donnent plus de points quand ils touchent la base
+                        pass
+            
         # Remove dead pixels (in reverse order to maintain correct indices)
         for i in sorted(pixels_to_remove, reverse=True):
             if i < len(self.pixels):

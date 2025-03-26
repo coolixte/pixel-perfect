@@ -2,8 +2,8 @@ import pygame
 import os
 from settings import (
     ASSETS_DIR, 
-    CURSOR_NORMAL, CURSOR_HOVER, CURSOR_CLICK, CURSOR_ZOOM, CURSOR_VISIBLE,
-    CURSOR_NORMAL_SCALE, CURSOR_HOVER_SCALE, CURSOR_CLICK_SCALE, CURSOR_ZOOM_SCALE
+    CURSOR_NORMAL, CURSOR_HOVER, CURSOR_CLICK, CURSOR_ZOOM, CURSOR_PAINT, CURSOR_VISIBLE,
+    CURSOR_NORMAL_SCALE, CURSOR_HOVER_SCALE, CURSOR_CLICK_SCALE, CURSOR_ZOOM_SCALE, CURSOR_PAINT_SCALE
 )
 
 class CursorManager:
@@ -22,12 +22,14 @@ class CursorManager:
         self.cursor_hover = self._load_cursor_image(CURSOR_HOVER, CURSOR_HOVER_SCALE)
         self.cursor_click = self._load_cursor_image(CURSOR_CLICK, CURSOR_CLICK_SCALE)
         self.cursor_zoom = self._load_cursor_image(CURSOR_ZOOM, CURSOR_ZOOM_SCALE)
+        self.cursor_paint = self._load_cursor_image(CURSOR_PAINT, CURSOR_PAINT_SCALE)
         
         # Définit l'état initial du curseur
         self.current_cursor = self.cursor_normal
         self.is_hovering = False
         self.is_clicking = False
         self.is_zooming = False
+        self.is_game_mode = False  # Nouvel état pour le mode jeu
         self.mouse_in_window = False  # Vérifie si la souris est dans la fenêtre
         
         # Masque le curseur système si spécifié dans les paramètres
@@ -62,7 +64,7 @@ class CursorManager:
             pygame.draw.rect(fallback, (255, 255, 255, 180), (0, 0, 16, 16))
             return fallback
     
-    def update(self, mouse_pos, mouse_pressed, hovering_button=False, hovering_title=False, mouse_in_window=False):
+    def update(self, mouse_pos, mouse_pressed, hovering_button=False, hovering_title=False, mouse_in_window=False, game_mode=False):
         """
         Met à jour l'état du curseur en fonction de la position de la souris et de l'état des boutons.
         
@@ -72,14 +74,19 @@ class CursorManager:
             hovering_button: Booléen indiquant si la souris survole un bouton
             hovering_title: Booléen indiquant si la souris survole le titre
             mouse_in_window: Booléen indiquant si la souris est dans la fenêtre
+            game_mode: Booléen indiquant si on est en mode jeu
         """
         self.is_hovering = hovering_button
         self.is_clicking = mouse_pressed[0]  # Bouton gauche de la souris
         self.is_zooming = hovering_title
         self.mouse_in_window = mouse_in_window
+        self.is_game_mode = game_mode
         
         # Détermine quel curseur afficher
-        if self.is_clicking:
+        if self.is_game_mode:
+            # En mode jeu, utiliser le curseur de peinture
+            self.current_cursor = self.cursor_paint
+        elif self.is_clicking:
             self.current_cursor = self.cursor_click
         elif self.is_zooming:
             self.current_cursor = self.cursor_zoom
