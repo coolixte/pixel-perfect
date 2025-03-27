@@ -551,14 +551,31 @@ def options_menu():
                         # Met à jour l'état de la musique
                         music_enabled = music_toggle.get_state()
                         if music_enabled:
-                            pygame.mixer.music.set_volume(original_music_volume)
+                            # Restart music immediately when toggled on
+                            try:
+                                # Reset the volume in settings first
+                                settings.MUSIC_VOLUME = original_music_volume
+                                # Stop any currently playing music
+                                pygame.mixer.music.stop()
+                                # Reload music and play
+                                bg_music_path = os.path.join(settings.ASSETS_DIR, "pixel-song.mp3")
+                                if os.path.exists(bg_music_path):
+                                    pygame.mixer.music.load(bg_music_path)
+                                    pygame.mixer.music.set_volume(original_music_volume)
+                                    pygame.mixer.music.play(-1)
+                            except pygame.error as e:
+                                print(f"Error restarting music: {e}")
                         else:
-                            pygame.mixer.music.set_volume(0)
+                            # Just stop the music entirely when disabled
+                            pygame.mixer.music.stop()
+                            # Also set volume to 0
+                            settings.MUSIC_VOLUME = 0
                             
                     elif sound_toggle.check_click(event.pos):
                         # Met à jour l'état des effets sonores
                         sound_effects_enabled = sound_toggle.get_state()
                         if sound_effects_enabled:
+                            # Reset all volume settings to original values
                             settings.SFX_VOLUME = original_sfx_volume
                             settings.EXPLOSION_VOLUME = original_sfx_volume * 0.8
                             settings.COLLECT_VOLUME = original_sfx_volume
@@ -568,6 +585,8 @@ def options_menu():
                             # Re-enable sounds immediately
                             if explode_sound:
                                 explode_sound.set_volume(settings.EXPLOSION_VOLUME)
+                                # Play sound immediately to demonstrate sound is working
+                                explode_sound.play()
                             if death_sound:
                                 death_sound.set_volume(settings.DEATH_VOLUME)
                             if collect_sound:
@@ -575,6 +594,7 @@ def options_menu():
                             if game_over_sound:
                                 game_over_sound.set_volume(settings.GAME_OVER_VOLUME)
                         else:
+                            # Zero out all volume settings
                             settings.SFX_VOLUME = 0
                             settings.EXPLOSION_VOLUME = 0
                             settings.COLLECT_VOLUME = 0
@@ -584,12 +604,16 @@ def options_menu():
                             # Disable sounds immediately
                             if explode_sound:
                                 explode_sound.set_volume(0)
+                                explode_sound.stop()  # Stop any currently playing sounds
                             if death_sound:
                                 death_sound.set_volume(0)
+                                death_sound.stop()
                             if collect_sound:
                                 collect_sound.set_volume(0)
+                                collect_sound.stop()
                             if game_over_sound:
                                 game_over_sound.set_volume(0)
+                                game_over_sound.stop()
                         
                     elif exit_button.check_click(event.pos):
                         # Démarre l'animation de transition pour revenir au menu principal
@@ -718,26 +742,77 @@ def main():
     clock = pygame.time.Clock()
     running = True
     
-    # Initialize background music
-    load_menu_music()
+    # Store the original volume settings at startup
+    ORIGINAL_MUSIC_VOLUME = settings.MUSIC_VOLUME
+    ORIGINAL_SFX_VOLUME = settings.SFX_VOLUME
+    ORIGINAL_EXPLOSION_VOLUME = settings.EXPLOSION_VOLUME
+    ORIGINAL_COLLECT_VOLUME = settings.COLLECT_VOLUME
+    ORIGINAL_DEATH_VOLUME = settings.DEATH_VOLUME
+    ORIGINAL_GAME_OVER_VOLUME = settings.GAME_OVER_VOLUME
     
-    # Load sound effects for the main menu
-    try:
-        explode_sound_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
-        if os.path.exists(explode_sound_path):
-            explode_sound = pygame.mixer.Sound(explode_sound_path)
-            # Set volume based on sound effects setting
-            if sound_effects_enabled:
-                explode_sound.set_volume(settings.EXPLOSION_VOLUME)
-            else:
-                explode_sound.set_volume(0)
+    # Function to properly initialize or update sound settings
+    def update_sound_settings():
+        nonlocal explode_sound
+        
+        # Initialize or update background music
+        if music_enabled:
+            # Restore original music volume setting
+            settings.MUSIC_VOLUME = ORIGINAL_MUSIC_VOLUME
+            # Explicitly force music to reload and play
+            try:
+                pygame.mixer.music.stop()  # Stop any existing music first
+                bg_music_path = os.path.join(settings.ASSETS_DIR, "pixel-song.mp3")
+                if os.path.exists(bg_music_path):
+                    pygame.mixer.music.load(bg_music_path)
+                    pygame.mixer.music.set_volume(ORIGINAL_MUSIC_VOLUME)
+                    pygame.mixer.music.play(-1)
+                else:
+                    print(f"Warning: Background music file '{bg_music_path}' not found.")
+            except pygame.error as e:
+                print(f"Error reloading music: {e}")
         else:
-            print(f"Warning: Sound file '{explode_sound_path}' not found.")
+            # Ensure music volume is 0 in settings
+            settings.MUSIC_VOLUME = 0
+            pygame.mixer.music.stop()
+        
+        # Initialize or update sound effects settings
+        if sound_effects_enabled:
+            # Restore all original sound effect volumes
+            settings.SFX_VOLUME = ORIGINAL_SFX_VOLUME
+            settings.EXPLOSION_VOLUME = ORIGINAL_EXPLOSION_VOLUME
+            settings.COLLECT_VOLUME = ORIGINAL_COLLECT_VOLUME
+            settings.DEATH_VOLUME = ORIGINAL_DEATH_VOLUME
+            settings.GAME_OVER_VOLUME = ORIGINAL_GAME_OVER_VOLUME
+        else:
+            # Set all sound effect volumes to 0
+            settings.SFX_VOLUME = 0
+            settings.EXPLOSION_VOLUME = 0
+            settings.COLLECT_VOLUME = 0
+            settings.DEATH_VOLUME = 0
+            settings.GAME_OVER_VOLUME = 0
+        
+        # Always reload the explosion sound
+        try:
+            explode_sound_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
+            if os.path.exists(explode_sound_path):
+                # Always reload the sound to ensure a fresh instance
+                explode_sound = pygame.mixer.Sound(explode_sound_path)
+                # Set volume based on sound effects setting
+                if sound_effects_enabled:
+                    explode_sound.set_volume(ORIGINAL_EXPLOSION_VOLUME)
+                else:
+                    explode_sound.set_volume(0)
+            else:
+                print(f"Warning: Sound file '{explode_sound_path}' not found.")
+                explode_sound = None
+        except pygame.error as e:
+            print(f"Error loading explode sound: {e}")
             explode_sound = None
-    except pygame.error as e:
-        print(f"Error loading explode sound: {e}")
-        explode_sound = None
-
+    
+    # Initialize sound effects for the main menu
+    explode_sound = None
+    update_sound_settings()
+    
     # Title expansion variables
     title_scale = settings.TITLE_SCALE
     title_hover = False
@@ -905,16 +980,8 @@ def main():
                             # Actualiser le meilleur score après avoir joué
                             highscore = load_highscore()
                             
-                            # Restart music when returning from game
-                            try:
-                                # Recharger complètement la musique du menu au lieu de juste la remettre
-                                if music_enabled:
-                                    load_menu_music()
-                                else:
-                                    # Ensure music is stopped if disabled
-                                    pygame.mixer.music.stop()
-                            except pygame.error as e:
-                                print(f"Error restarting music: {e}")
+                            # Properly update all sound settings when returning from game
+                            update_sound_settings()
                         
                     elif next_scene == "options":
                         print("Transitioning to Options scene")
@@ -922,19 +989,8 @@ def main():
                         # Call the options menu function
                         options_menu()
                         
-                        # Restart music when returning from options menu
-                        try:
-                            # In case music state was changed
-                            if music_enabled:
-                                pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)
-                            else:
-                                pygame.mixer.music.set_volume(0)
-                        except pygame.error as e:
-                            print(f"Error restarting music: {e}")
-                        
-                        # Apply sound effect changes to current sounds
-                        if explode_sound:
-                            explode_sound.set_volume(settings.EXPLOSION_VOLUME)
+                        # Properly update all sound settings when returning from options
+                        update_sound_settings()
                         
                         # Make sure we reset the title scale
                         title_scale = settings.TITLE_SCALE
