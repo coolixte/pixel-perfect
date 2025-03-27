@@ -520,10 +520,21 @@ def options_menu():
     running = True
     in_transition = False
     next_scene = None
+    waiting_for_elements_exit = False
     
     # Pour calculer le delta time
     clock = pygame.time.Clock()
     last_time = pygame.time.get_ticks() / 1000.0
+    
+    # Charger le meilleur score
+    highscore = load_highscore()
+    
+    # Charger et initialiser la police pour le meilleur score
+    try:
+        highscore_font = pygame.font.SysFont("Arial", settings.HIGHSCORE_FONT_SIZE, bold=False)
+    except pygame.error as e:
+        print(f"Erreur lors du chargement de la police pour le meilleur score: {e}")
+        highscore_font = None
     
     # Boucle principale du menu des options
     while running:
@@ -673,8 +684,8 @@ def options_menu():
         
         # Vérifie si la souris survole un bouton quelconque (à l'exclusion du titre)
         hovering_button = (
-            play_button.hovered or 
-            options_button.hovered or 
+            music_toggle.hovered or 
+            sound_toggle.hovered or 
             exit_button.hovered
         )
         
@@ -693,49 +704,37 @@ def options_menu():
         # Met à jour l'animation de flash d'écran
         screen_flash.update(dt)
         
+        # Met à jour l'animation de transition si en cours
+        if in_transition:
+            transition_active = transition_animation.update(dt)
+            
+            # Si l'animation de transition est terminée
+            if not transition_active and transition_animation.all_elements_exited_screen():
+                if next_scene == "exit":
+                    # Démarre le flash d'écran puis retourne au menu principal
+                    screen_flash.start()
+                    running = False
+        
         # Dessine
         screen.fill(settings.BLACK)
         
         # Dessine la bordure comme arrière-plan (première couche) - dessine toujours la bordure
         screen.blit(scaled_border_img, border_rect)
         
-        # Dessine toujours le titre si on va vers le menu des options
-        if in_transition and next_scene == "options":
-            # Dessine le titre avec l'effet de survol
-            screen.blit(scaled_title, title_rect)
+        # Dessine le titre
+        screen.blit(scaled_title, title_rect)
         
         # Dessine les éléments de l'interface ou l'animation de transition
         if in_transition:
             # Si en transition, dessine la bordure et les éléments de transition
             transition_animation.draw(screen)
         else:
-            # Dessine l'interface normale si pas en transition et pas en attente de sortie des éléments
-            if not waiting_for_elements_exit:
-                # Dessine le titre avec l'effet de survol
-                screen.blit(scaled_title, title_rect)
-                
-                # Dessine les boutons
-                play_button.draw(screen)
-                options_button.draw(screen)
-                exit_button.draw(screen)
-                
-                # Dessine l'image du nom au premier plan (dernière couche)
-                screen.blit(scaled_name_img, name_rect)
-                
-                # Affiche le meilleur score
-                if highscore_font:
-                    highscore_text = highscore_font.render(f"HIGHSCORE LOCAL: {highscore}", True, settings.WHITE)
-                    highscore_rect = highscore_text.get_rect(midtop=(settings.HIGHSCORE_X_POSITION, settings.HIGHSCORE_Y_POSITION))
-                    
-                    # Affiche la couronne à gauche du texte du meilleur score
-                    crown_rect = scaled_crown_img.get_rect(
-                        midright=(highscore_rect.left - settings.CROWN_SPACING,
-                                 highscore_rect.centery + settings.CROWN_Y_OFFSET)
-                    )
-                    screen.blit(scaled_crown_img, crown_rect)
-                    
-                    # Affiche le texte du highscore après la couronne
-                    screen.blit(highscore_text, highscore_rect)
+            # Dessine les labels et les boutons
+            screen.blit(music_label, music_label_rect)
+            screen.blit(sound_effects_label, sound_effects_label_rect)
+            music_toggle.draw(screen)
+            sound_toggle.draw(screen)
+            exit_button.draw(screen)
         
         # Dessine l'animation de pixels (doit être après les éléments de l'interface mais avant le curseur)
         pixel_animation.draw(screen)
@@ -1004,8 +1003,12 @@ def main():
                     elif next_scene == "options":
                         print("Transition vers la scène d'options")
                         in_transition = False
+                        waiting_for_elements_exit = False
                         # Appelle la fonction du menu des options
                         options_menu()
+                        
+                        # Recharge le score après retour du menu options
+                        highscore = load_highscore()
                         
                         # Met à jour correctement tous les paramètres sonores lors du retour des options
                         update_sound_settings()
