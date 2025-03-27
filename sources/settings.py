@@ -163,3 +163,30 @@ EXPLOSION_VOLUME = 0.4  # Volume des sons d'explosion
 COLLECT_VOLUME = 0.5    # Volume des sons de collecte
 DEATH_VOLUME = 0.6      # Volume des sons de mort
 GAME_OVER_VOLUME = 0.7  # Volume du son de fin de jeu (légèrement plus fort que le son de mort)
+
+# Paramètres du menu options
+MUSIC_LABEL_X_POSITION = SCREEN_WIDTH // 2 - 40 # Centré horizontalement
+MUSIC_LABEL_Y_POSITION = SCREEN_HEIGHT // 2 - 50  # Au-dessus du centre
+MUSIC_LABEL_SCALE = 0.7
+
+SOUND_EFFECTS_LABEL_X_POSITION = SCREEN_WIDTH // 2 - 40 # Centré horizontalement
+SOUND_EFFECTS_LABEL_Y_POSITION = SCREEN_HEIGHT // 2 + 50  # En dessous du centre
+SOUND_EFFECTS_LABEL_SCALE = 0.7
+
+# Séparation des paramètres pour chaque bouton toggle
+# Bouton toggle pour la musique
+MUSIC_TOGGLE_OFFSET_X = 150  # Distance horizontale entre le label et le bouton
+MUSIC_TOGGLE_SCALE = 0.7
+MUSIC_TOGGLE_SHADOW_OFFSET = 3  # Décalage de l'ombre des boutons
+MUSIC_TOGGLE_SHADOW_ALPHA = 128  # Transparence de l'ombre (0-255)
+
+# Bouton toggle pour les effets sonores
+SOUND_TOGGLE_OFFSET_X = 250  # Distance horizontale entre le label et le bouton
+SOUND_TOGGLE_SCALE = 0.7
+SOUND_TOGGLE_SHADOW_OFFSET = 3  # Décalage de l'ombre des boutons
+SOUND_TOGGLE_SHADOW_ALPHA = 128  # Transparence de l'ombre (0-255)
+
+# Paramètres du bouton de retour (dans le menu options)
+OPTIONS_EXIT_BUTTON_X_POSITION = SCREEN_WIDTH // 2
+OPTIONS_EXIT_BUTTON_Y_POSITION = SCREEN_HEIGHT // 2 + 170
+OPTIONS_EXIT_BUTTON_SCALE = 0.25

@@ -48,7 +48,7 @@ python main.py
   - **Pixels blancs** : Les plus communs, donnent 1 point par clic
   - **Pixels orange** : Génèrent 2 pixels blancs quand ils sont détruits, 3 points par clic
   - **Pixels rouges** : Dangereux ! Provoquent un Game Over immédiat si vous cliquez dessus, mais donnent 5 points s'ils touchent le cœur
-  - **Pixels verts** : Suppriment tout les pixels jaunes et blancs sur l'écran: ils sont rares alors cliquez au moment opportun!
+  - **Pixels verts** : Suppriment tout les pixels jaunes et blancs de l'écran: ils sont rares alors cliquez au moment opportun!
 - Perdez une vie quand un pixel blanc ou orange touche votre cœur
 - Le jeu devient de plus en plus difficile avec le temps
 - Le jeu se termine quand vous perdez vos 5 vies

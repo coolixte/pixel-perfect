@@ -291,15 +291,20 @@ class GamePixel:
 
 class Game:
     """Main game class that manages the game state and logic."""
-    def __init__(self, screen, skip_entry_flash=False):
+    def __init__(self, screen, skip_entry_flash=False, music_enabled=True, sound_effects_enabled=True):
         """
         Initialize the game.
         
         Args:
             screen (Surface): Pygame surface to draw on
             skip_entry_flash (bool): If True, skip the initial fade in effect
+            music_enabled (bool): If False, disable music
+            sound_effects_enabled (bool): If False, disable sound effects
         """
         self.screen = screen
+        self.skip_entry_flash = skip_entry_flash
+        self.music_enabled = music_enabled
+        self.sound_effects_enabled = sound_effects_enabled
         self.running = True
         self.return_to_menu = False  # Flag to indicate whether to return to menu
         self.game_over_pending = False  # Flag to track delayed game over transition
@@ -491,20 +496,22 @@ class Game:
     
     def start_background_music(self):
         """Start the background music for the game."""
-        try:
-            # Stop any existing music
-            pygame.mixer.music.stop()
-            
-            # Load and play game background music
-            bg_music_path = os.path.join(settings.ASSETS_DIR, "game-song.mp3")
-            if os.path.exists(bg_music_path):
-                pygame.mixer.music.load(bg_music_path)
-                pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Use the setting value
-                pygame.mixer.music.play(-1)  # -1 means loop indefinitely
-            else:
-                print(f"Warning: Game background music file '{bg_music_path}' not found.")
-        except pygame.error as e:
-            print(f"Error loading game background music: {e}")
+        # Only play music if enabled
+        if self.music_enabled:
+            try:
+                # Stop any existing music
+                pygame.mixer.music.stop()
+                
+                # Load and play game background music
+                bg_music_path = os.path.join(settings.ASSETS_DIR, "game-song.mp3")
+                if os.path.exists(bg_music_path):
+                    pygame.mixer.music.load(bg_music_path)
+                    pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Use the setting value
+                    pygame.mixer.music.play(-1)  # -1 means loop indefinitely
+                else:
+                    print(f"Warning: Game background music file '{bg_music_path}' not found.")
+            except pygame.error as e:
+                print(f"Error loading game background music: {e}")
     
     def spawn_pixel(self):
         """Spawn a new pixel at the edge of the screen but inside the border."""
@@ -632,8 +639,7 @@ class Game:
         self.lives -= 1
         
         # Play death sound when losing a life
-        if hasattr(self, 'death_sound') and self.death_sound:
-            self.death_sound.play()
+        self.play_sound(self.death_sound)
         
         # Create red pixel animation on the heart when losing a life
         for _ in range(15):  # Create 15 particles
@@ -692,8 +698,7 @@ class Game:
             from_red_pixel (bool): Whether game over was triggered by clicking a red pixel
         """
         # Play game over sound
-        if hasattr(self, 'game_over_sound') and self.game_over_sound:
-            self.game_over_sound.play()
+        self.play_sound(self.game_over_sound)
             
         # Create particle effects at the heart position
         # Use more particles if triggered by red pixel for a more dramatic effect
@@ -794,7 +799,7 @@ class Game:
                         if clicked_pixel:
                             # Play explode sound for pixel clicks
                             if hasattr(self, 'explode_sound') and self.explode_sound:
-                                self.explode_sound.play()
+                                self.play_sound(self.explode_sound)
                                 
                             if clicked_pixel.type == "white":
                                 # White pixel: destroy and create animation
@@ -824,7 +829,7 @@ class Game:
                                 
                                 # Play collect sound for green pixel
                                 if hasattr(self, 'collect_sound') and self.collect_sound:
-                                    self.collect_sound.play()
+                                    self.play_sound(self.collect_sound)
                                 
                                 self.apply_powerup()
                                 
@@ -849,7 +854,7 @@ class Game:
                     
                     # If clicked on an interactive element like a button or pixel, play explode sound
                     if clicked_on_interactive and not clicked_pixel and hasattr(self, 'explode_sound') and self.explode_sound:
-                        self.explode_sound.play()
+                        self.play_sound(self.explode_sound)
             
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:  # Left mouse button release
@@ -1038,8 +1043,9 @@ class Game:
                         # Mark pixel as one that will damage the heart when it finishes blinking
                         pixel.will_damage_heart = True
                     elif pixel.type == "red":
-                        # Les pixels rouges ne donnent plus de points quand ils touchent la base
-                        pass
+                        # Les pixels rouges donnent des points quand ils touchent la base
+                        # Mais ne causent pas de dégâts au cœur
+                        self.add_score(settings.RED_PIXEL_BASE_POINTS)
             
         # Remove dead pixels (in reverse order to maintain correct indices)
         for i in sorted(pixels_to_remove, reverse=True):
@@ -1054,7 +1060,7 @@ class Game:
                     
                     # Play explode sound for pixel popping
                     if hasattr(self, 'explode_sound') and self.explode_sound:
-                        self.explode_sound.play()
+                        self.play_sound(self.explode_sound)
                     
                     # Apply effects based on pixel type
                     if pixel.will_damage_heart:
@@ -1065,7 +1071,7 @@ class Game:
                         self.apply_powerup()
                         # Play collect sound
                         if hasattr(self, 'collect_sound') and self.collect_sound:
-                            self.collect_sound.play()
+                            self.play_sound(self.collect_sound)
                 
                 # Now remove the pixel
                 del self.pixels[i]
@@ -1172,19 +1178,31 @@ class Game:
             
         return self.running
 
-def start(screen, skip_entry_flash=False):
+    def play_sound(self, sound):
+        """
+        Play a sound effect if sound effects are enabled.
+        
+        Args:
+            sound: The pygame Sound object to play
+        """
+        if self.sound_effects_enabled:
+            sound.play()
+
+def start(screen, skip_entry_flash=False, music_enabled=True, sound_effects_enabled=True):
     """
     Start the game.
     
     Args:
         screen (Surface): Pygame surface to draw on
         skip_entry_flash (bool): If True, skip the initial fade in effect
+        music_enabled (bool): If False, disable music
+        sound_effects_enabled (bool): If False, disable sound effects
         
     Returns:
         bool: True if game should return to menu, False if should exit
     """
     # Always create a new Game instance to ensure fresh settings
-    game = Game(screen, skip_entry_flash)
+    game = Game(screen, skip_entry_flash, music_enabled, sound_effects_enabled)
     result = game.run()
     
     # If game ended due to return_to_menu flag, always return True
