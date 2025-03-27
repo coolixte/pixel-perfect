@@ -3,6 +3,9 @@ import random
 import math
 import settings
 
+# Pixel Animation —————————————————————————————————————————————————————————————————————————————————————
+# —————————————————————————————————————————————————————————————————————————————————————————————————————
+
 class PixelParticle:
     """Représente une particule de pixel unique dans l'animation."""
     def __init__(self, x, y, angle, speed, size=3, color=(255, 255, 255)):

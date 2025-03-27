@@ -3,6 +3,9 @@ import random
 import math
 import settings
 
+# Transitions —————————————————————————————————————————————————————————————————————————————————————————
+# —————————————————————————————————————————————————————————————————————————————————————————————————————
+
 class TransitionElement:
     """Représente un élément d'interface utilisateur avec physique pendant l'animation de transition."""
     def __init__(self, image, rect, reverse=False):

@@ -9,6 +9,9 @@ from transition import TransitionAnimation  # Importe notre nouveau système d'a
 from screen_flash import ScreenFlash  # Importe notre système d'animation de flash d'écran
 import game  # Importe notre module de jeu
 
+# Main ———————————————————————————————————————————————————————————————————————————————————————————————
+# ————————————————————————————————————————————————————————————————————————————————————————————————————
+
 # Classe de bouton à bascule
 class ToggleButton:
     """Classe de bouton à bascule pour les options marche/arrêt."""
@@ -345,25 +348,25 @@ music_enabled = True
 sound_effects_enabled = True
 
 def load_menu_music():
-    """Load and play the menu background music."""
+    """Charge et joue la musique de fond du menu."""
     global music_enabled
     
-    # Don't load music if it's disabled
+    # Ne charge pas la musique si elle est désactivée
     if not music_enabled:
         pygame.mixer.music.stop()
         return
         
     try:
-        # Load and play background music
+        # Charge et joue la musique de fond
         bg_music_path = os.path.join(settings.ASSETS_DIR, "pixel-song.mp3")
         if os.path.exists(bg_music_path):
             pygame.mixer.music.load(bg_music_path)
-            pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Use the setting value
-            pygame.mixer.music.play(-1)  # -1 means loop indefinitely
+            pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Utilise la valeur du paramètre
+            pygame.mixer.music.play(-1)  # -1 signifie boucler indéfiniment
         else:
-            print(f"Warning: Background music file '{bg_music_path}' not found.")
+            print(f"Avertissement: Fichier de musique de fond '{bg_music_path}' introuvable.")
     except pygame.error as e:
-        print(f"Error loading background music: {e}")
+        print(f"Erreur lors du chargement de la musique de fond: {e}")
 
 def options_menu():
     """Affiche et gère le menu des options."""
@@ -373,7 +376,7 @@ def options_menu():
     original_music_volume = settings.MUSIC_VOLUME
     original_sfx_volume = settings.SFX_VOLUME
     
-    # Load sound effects for volume control
+    # Charge les effets sonores pour le contrôle du volume
     try:
         explode_sound_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
         if os.path.exists(explode_sound_path):
@@ -382,7 +385,7 @@ def options_menu():
         else:
             explode_sound = None
             
-        # Load death sound
+        # Charge le son de mort
         death_path = os.path.join(settings.ASSETS_DIR, "death.mp3")
         if os.path.exists(death_path):
             death_sound = pygame.mixer.Sound(death_path)
@@ -390,7 +393,7 @@ def options_menu():
         else:
             death_sound = None
             
-        # Load collect sound
+        # Charge le son de collecte
         collect_path = os.path.join(settings.ASSETS_DIR, "collect.mp3")
         if os.path.exists(collect_path):
             collect_sound = pygame.mixer.Sound(collect_path)
@@ -398,7 +401,7 @@ def options_menu():
         else:
             collect_sound = None
         
-        # Load game-over sound
+        # Charge le son de game-over
         game_over_path = os.path.join(settings.ASSETS_DIR, "game-over.mp3")
         if os.path.exists(game_over_path):
             game_over_sound = pygame.mixer.Sound(game_over_path)
@@ -406,13 +409,13 @@ def options_menu():
         else:
             game_over_sound = None
     except pygame.error as e:
-        print(f"Error loading sound effects: {e}")
+        print(f"Erreur lors du chargement des effets sonores: {e}")
         explode_sound = None
         death_sound = None
         collect_sound = None
         game_over_sound = None
     
-    # Function to play sound effects when enabled
+    # Fonction pour jouer les effets sonores lorsqu'ils sont activés
     def play_sound(sound):
         if sound_effects_enabled and sound:
             sound.play()
@@ -478,7 +481,7 @@ def options_menu():
     # Charge le titre
     title_img = load_image("title.png")
     
-    # Title animation variables
+    # Variables d'animation du titre
     title_scale = settings.TITLE_SCALE
     title_hover = False
     
@@ -494,7 +497,7 @@ def options_menu():
         center=(settings.BORDER_X_POSITION, settings.BORDER_Y_POSITION)
     )
     
-    # Initialize title with current scale
+    # Initialise le titre avec l'échelle actuelle
     scaled_title_width = int(title_img.get_width() * title_scale)
     scaled_title_height = int(title_img.get_height() * title_scale)
     scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
@@ -638,29 +641,29 @@ def options_menu():
             # Vérifie le survol des boutons pour l'animation de pixels
             pixel_animation.check_button_hover([music_toggle, sound_toggle, exit_button])
         
-        # Always calculate title hover effect, even during transition
-        # Calculate title hover effect (moves up and down slightly)
-        time = pygame.time.get_ticks() / 1000  # Convert to seconds
+        # Toujours calculer l'effet de survol du titre, même pendant la transition vers les options
+        # Calcule l'effet de survol du titre (se déplace légèrement vers le haut et le bas)
+        time = pygame.time.get_ticks() / 1000  # Convertit en secondes
         title_y_offset = math.sin(time * settings.TITLE_HOVER_SPEED) * settings.TITLE_HOVER_AMPLITUDE
         
-        # Calculate title rect for hover detection
+        # Calcule le rectangle du titre pour la détection de survol
         base_title_rect = title_img.get_rect(
             center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION + title_y_offset)
         )
         
-        # Only check hover interaction and scaling if not in transition
+        # Vérifie l'interaction de survol et la mise à l'échelle uniquement si pas en transition
         if not in_transition:
-            # Check if mouse is hovering over title
+            # Vérifie si la souris survole le titre
             if base_title_rect.collidepoint(mouse_pos):
                 title_hover = True
-                # Gradually increase scale up to max
+                # Augmente progressivement l'échelle jusqu'au maximum
                 title_scale = min(title_scale + settings.TITLE_SCALE_SPEED, settings.TITLE_MAX_SCALE)
             else:
                 title_hover = False
-                # Gradually decrease scale back to normal
+                # Diminue progressivement l'échelle pour revenir à la normale
                 title_scale = max(title_scale - settings.TITLE_SCALE_SPEED, settings.TITLE_SCALE)
         
-        # Scale the title image based on hover state
+        # Met à l'échelle l'image du titre en fonction de l'état de survol
         scaled_title_width = int(title_img.get_width() * title_scale)
         scaled_title_height = int(title_img.get_height() * title_scale)
         scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
@@ -668,12 +671,14 @@ def options_menu():
             center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION + title_y_offset)
         )
         
-        # Met à jour le gestionnaire de curseur
+        # Vérifie si la souris survole un bouton quelconque (à l'exclusion du titre)
         hovering_button = (
-            music_toggle.hovered or 
-            sound_toggle.hovered or 
+            play_button.hovered or 
+            options_button.hovered or 
             exit_button.hovered
         )
+        
+        # Met à jour l'état du curseur avec un paramètre de survol du titre distinct
         cursor_manager.update(
             mouse_pos, 
             pygame.mouse.get_pressed(), 
@@ -688,44 +693,57 @@ def options_menu():
         # Met à jour l'animation de flash d'écran
         screen_flash.update(dt)
         
-        # Met à jour l'animation de transition si en cours
-        if in_transition:
-            transition_active = transition_animation.update(dt)
-            
-            # Si l'animation de transition est terminée
-            if not transition_active and transition_animation.all_elements_exited_screen():
-                if next_scene == "exit":
-                    # Démarre le flash d'écran puis retourne au menu principal
-                    screen_flash.start()
-                    running = False
-        
-        # Dessine l'écran
+        # Dessine
         screen.fill(settings.BLACK)
         
-        # Dessine la bordure comme arrière-plan
+        # Dessine la bordure comme arrière-plan (première couche) - dessine toujours la bordure
         screen.blit(scaled_border_img, border_rect)
         
-        # Dessine le titre
-        screen.blit(scaled_title, title_rect)
+        # Dessine toujours le titre si on va vers le menu des options
+        if in_transition and next_scene == "options":
+            # Dessine le titre avec l'effet de survol
+            screen.blit(scaled_title, title_rect)
         
         # Dessine les éléments de l'interface ou l'animation de transition
         if in_transition:
+            # Si en transition, dessine la bordure et les éléments de transition
             transition_animation.draw(screen)
         else:
-            # Dessine les labels et les boutons
-            screen.blit(music_label, music_label_rect)
-            screen.blit(sound_effects_label, sound_effects_label_rect)
-            music_toggle.draw(screen)
-            sound_toggle.draw(screen)
-            exit_button.draw(screen)
+            # Dessine l'interface normale si pas en transition et pas en attente de sortie des éléments
+            if not waiting_for_elements_exit:
+                # Dessine le titre avec l'effet de survol
+                screen.blit(scaled_title, title_rect)
+                
+                # Dessine les boutons
+                play_button.draw(screen)
+                options_button.draw(screen)
+                exit_button.draw(screen)
+                
+                # Dessine l'image du nom au premier plan (dernière couche)
+                screen.blit(scaled_name_img, name_rect)
+                
+                # Affiche le meilleur score
+                if highscore_font:
+                    highscore_text = highscore_font.render(f"HIGHSCORE LOCAL: {highscore}", True, settings.WHITE)
+                    highscore_rect = highscore_text.get_rect(midtop=(settings.HIGHSCORE_X_POSITION, settings.HIGHSCORE_Y_POSITION))
+                    
+                    # Affiche la couronne à gauche du texte du meilleur score
+                    crown_rect = scaled_crown_img.get_rect(
+                        midright=(highscore_rect.left - settings.CROWN_SPACING,
+                                 highscore_rect.centery + settings.CROWN_Y_OFFSET)
+                    )
+                    screen.blit(scaled_crown_img, crown_rect)
+                    
+                    # Affiche le texte du highscore après la couronne
+                    screen.blit(highscore_text, highscore_rect)
         
-        # Dessine l'animation de pixels
+        # Dessine l'animation de pixels (doit être après les éléments de l'interface mais avant le curseur)
         pixel_animation.draw(screen)
         
-        # Dessine le curseur personnalisé
+        # Dessine le curseur personnalisé (doit être en dernier)
         cursor_manager.draw(screen)
         
-        # Dessine le flash d'écran (doit être la dernière chose à dessiner)
+        # Dessine le flash d'écran (doit être la toute dernière chose à dessiner)
         screen_flash.draw(screen)
         
         # Met à jour l'affichage
@@ -736,13 +754,13 @@ def options_menu():
 
 # Main game loop
 def main():
-    """Main game function."""
+    """Fonction principale du jeu."""
     global music_enabled, sound_effects_enabled
     
     clock = pygame.time.Clock()
     running = True
     
-    # Store the original volume settings at startup
+    # Stocke les paramètres de volume originaux au démarrage
     ORIGINAL_MUSIC_VOLUME = settings.MUSIC_VOLUME
     ORIGINAL_SFX_VOLUME = settings.SFX_VOLUME
     ORIGINAL_EXPLOSION_VOLUME = settings.EXPLOSION_VOLUME
@@ -750,103 +768,103 @@ def main():
     ORIGINAL_DEATH_VOLUME = settings.DEATH_VOLUME
     ORIGINAL_GAME_OVER_VOLUME = settings.GAME_OVER_VOLUME
     
-    # Function to properly initialize or update sound settings
+    # Fonction pour initialiser ou mettre à jour correctement les paramètres sonores
     def update_sound_settings():
         nonlocal explode_sound
         
-        # Initialize or update background music
+        # Initialise ou met à jour la musique de fond
         if music_enabled:
-            # Restore original music volume setting
+            # Restaure le volume de musique original
             settings.MUSIC_VOLUME = ORIGINAL_MUSIC_VOLUME
-            # Explicitly force music to reload and play
+            # Force explicitement le rechargement et la lecture de la musique
             try:
-                pygame.mixer.music.stop()  # Stop any existing music first
+                pygame.mixer.music.stop()  # Arrête d'abord toute musique existante
                 bg_music_path = os.path.join(settings.ASSETS_DIR, "pixel-song.mp3")
                 if os.path.exists(bg_music_path):
                     pygame.mixer.music.load(bg_music_path)
                     pygame.mixer.music.set_volume(ORIGINAL_MUSIC_VOLUME)
                     pygame.mixer.music.play(-1)
                 else:
-                    print(f"Warning: Background music file '{bg_music_path}' not found.")
+                    print(f"Avertissement: Fichier de musique de fond '{bg_music_path}' introuvable.")
             except pygame.error as e:
-                print(f"Error reloading music: {e}")
+                print(f"Erreur lors du rechargement de la musique: {e}")
         else:
-            # Ensure music volume is 0 in settings
+            # S'assure que le volume de la musique est à 0 dans les paramètres
             settings.MUSIC_VOLUME = 0
             pygame.mixer.music.stop()
         
-        # Initialize or update sound effects settings
+        # Initialise ou met à jour les paramètres des effets sonores
         if sound_effects_enabled:
-            # Restore all original sound effect volumes
+            # Restaure tous les volumes d'effets sonores originaux
             settings.SFX_VOLUME = ORIGINAL_SFX_VOLUME
             settings.EXPLOSION_VOLUME = ORIGINAL_EXPLOSION_VOLUME
             settings.COLLECT_VOLUME = ORIGINAL_COLLECT_VOLUME
             settings.DEATH_VOLUME = ORIGINAL_DEATH_VOLUME
             settings.GAME_OVER_VOLUME = ORIGINAL_GAME_OVER_VOLUME
         else:
-            # Set all sound effect volumes to 0
+            # Met tous les volumes d'effets sonores à 0
             settings.SFX_VOLUME = 0
             settings.EXPLOSION_VOLUME = 0
             settings.COLLECT_VOLUME = 0
             settings.DEATH_VOLUME = 0
             settings.GAME_OVER_VOLUME = 0
         
-        # Always reload the explosion sound
+        # Recharge toujours le son d'explosion
         try:
             explode_sound_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
             if os.path.exists(explode_sound_path):
-                # Always reload the sound to ensure a fresh instance
+                # Recharge toujours le son pour assurer une nouvelle instance
                 explode_sound = pygame.mixer.Sound(explode_sound_path)
-                # Set volume based on sound effects setting
+                # Règle le volume en fonction du paramètre des effets sonores
                 if sound_effects_enabled:
                     explode_sound.set_volume(ORIGINAL_EXPLOSION_VOLUME)
                 else:
                     explode_sound.set_volume(0)
             else:
-                print(f"Warning: Sound file '{explode_sound_path}' not found.")
+                print(f"Avertissement: Fichier son '{explode_sound_path}' introuvable.")
                 explode_sound = None
         except pygame.error as e:
-            print(f"Error loading explode sound: {e}")
+            print(f"Erreur lors du chargement du son d'explosion: {e}")
             explode_sound = None
     
-    # Initialize sound effects for the main menu
+    # Initialise les effets sonores pour le menu principal
     explode_sound = None
     update_sound_settings()
     
-    # Title expansion variables
+    # Variables d'expansion du titre
     title_scale = settings.TITLE_SCALE
     title_hover = False
     
-    # Initialize cursor manager
+    # Initialise le gestionnaire de curseur
     cursor_manager = CursorManager()
     
-    # Initialize pixel animation system
+    # Initialise le système d'animation de pixels
     pixel_animation = PixelAnimation()
     
-    # Initialize transition animation system
+    # Initialise le système d'animation de transition
     transition_animation = TransitionAnimation()
     
-    # Initialize screen flash animation system
+    # Initialise le système d'animation de flash d'écran
     screen_flash = ScreenFlash()
     
-    # State tracking
+    # Suivi d'état
     in_transition = False
     next_scene = None
     waiting_for_elements_exit = False
     
-    # Track if mouse is inside the window
+    # Suivi si la souris est à l'intérieur de la fenêtre
     mouse_in_window = False
     
-    # For calculating delta time
+    # Pour calculer le delta time
     last_time = pygame.time.get_ticks() / 1000.0
     
-    # Initialize scaled_title and title_rect to ensure they're defined before event handling
+    # Initialise scaled_title et title_rect pour s'assurer qu'ils sont définis avant le traitement des événements
     scaled_title_width = int(title_img.get_width() * title_scale)
     scaled_title_height = int(title_img.get_height() * title_scale)
     scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
     title_rect = scaled_title.get_rect(center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION))
     
-    # Start with an initial screen flash when the game loads
+    # Commence avec un flash d'écran initial lorsque le jeu se charge
     screen_flash.start()
     
     # Charger et initialiser la police pour le meilleur score
@@ -866,44 +884,44 @@ def main():
         highscore_font = pygame.font.Font(None, settings.HIGHSCORE_FONT_SIZE)
 
     while running:
-        # Calculate delta time
+        # Calcule le delta time
         current_time = pygame.time.get_ticks() / 1000.0
         dt = current_time - last_time
         last_time = current_time
         
         mouse_pos = pygame.mouse.get_pos()
         
-        # Handle events
+        # Traite les événements
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEMOTION:
-                # Check if mouse is inside the window
+                # Vérifie si la souris est à l'intérieur de la fenêtre
                 x, y = event.pos
                 mouse_in_window = (0 <= x < settings.SCREEN_WIDTH and 0 <= y < settings.SCREEN_HEIGHT)
             
             
             elif event.type == pygame.ACTIVEEVENT:
-                # Handle window focus/unfocus events
-                if event.gain == 0 and event.state == 1:  # Mouse left the window
+                # Gère les événements de focus/perte de focus de la fenêtre
+                if event.gain == 0 and event.state == 1:  # La souris a quitté la fenêtre
                     mouse_in_window = False
-                elif event.gain == 1 and event.state == 1:  # Mouse entered the window
+                elif event.gain == 1 and event.state == 1:  # La souris est entrée dans la fenêtre
                     mouse_in_window = True
             
             
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Left mouse button
-                    # Only check button clicks if not in transition
+                if event.button == 1:  # Bouton gauche de la souris
+                    # Vérifie les clics de bouton uniquement si pas en transition
                     if not in_transition and not waiting_for_elements_exit:
-                        # Play click sound for any click on the menu
+                        # Joue le son de clic pour tout clic sur le menu
                         if explode_sound and sound_effects_enabled:
                             explode_sound.play()
                         
-                        # Spawn particles at click position - allow particles anywhere on menu screen
+                        # Génère des particules à la position du clic - permet les particules partout sur l'écran du menu
                         pixel_animation.spawn_particles(event.pos[0], event.pos[1])
                         
                         if play_button.check_click(event.pos):
-                            # Start transition animation
+                            # Démarre l'animation de transition
                             ui_elements = [
                                 (scaled_title, title_rect),
                                 (play_button.image, play_button.rect),
@@ -915,12 +933,12 @@ def main():
                             in_transition = True
                             next_scene = "play"
                             
-                            # Fade out music before transitioning to game
-                            pygame.mixer.music.fadeout(500)  # Fade out over 500ms
+                            # Fait disparaître la musique avant de passer au jeu
+                            pygame.mixer.music.fadeout(500)  # Fondu sortant sur 500ms
                         
                         elif options_button.check_click(event.pos):
-                            # Start transition animation - only include name_img for transition 
-                            # (title and border will remain on screen)
+                            # Démarre l'animation de transition - inclut seulement name_img pour la transition
+                            # (le titre et la bordure resteront à l'écran)
                             ui_elements = [
                                 (play_button.image, play_button.rect),
                                 (options_button.image, options_button.rect),
@@ -932,7 +950,7 @@ def main():
                             next_scene = "options"
                         
                         elif exit_button.check_click(event.pos):
-                            # Start transition animation
+                            # Démarre l'animation de transition
                             ui_elements = [
                                 (scaled_title, title_rect),
                                 (play_button.image, play_button.rect),
@@ -946,97 +964,97 @@ def main():
             
             
             elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:  # Left mouse button released
+                if event.button == 1:  # Bouton gauche de la souris relâché
                     play_button.release()
                     options_button.release()
                     exit_button.release()
         
-        # If in transition mode, update the transition animation
+        # Si en mode transition, met à jour l'animation de transition
         if in_transition:
             still_active = transition_animation.update(dt)
             
-            # If transition is no longer active
+            # Si la transition n'est plus active
             if not still_active:
-                # Check if all elements have exited the screen - immediately start the flash and scene change
+                # Vérifie si tous les éléments ont quitté l'écran - démarre immédiatement le flash et le changement de scène
                 if transition_animation.all_elements_exited_screen():
-                    # Start the screen flash immediately
+                    # Démarre le flash d'écran immédiatement
                     screen_flash.start()
                     
-                    # Handle scene change immediately during the flash
+                    # Gère le changement de scène immédiatement pendant le flash
                     if next_scene == "play":
-                        print("Transitioning to Play scene")
+                        print("Transition vers la scène de jeu")
                         in_transition = False
-                        # Launch the game immediately - we want game elements to appear during the white flash
-                        # Pass music and sound effect settings to the game
+                        # Lance le jeu immédiatement - nous voulons que les éléments du jeu apparaissent pendant le flash blanc
+                        # Passe les paramètres de musique et d'effets sonores au jeu
                         game_result = game.start(screen, skip_entry_flash=True, 
                                                music_enabled=music_enabled, 
                                                sound_effects_enabled=sound_effects_enabled)
                         if not game_result:
-                            running = False  # Exit the game if game returns False
+                            running = False  # Quitte le jeu si le jeu renvoie False
                         else:
-                            # Game returned to menu - reset menu state
+                            # Le jeu est retourné au menu - réinitialise l'état du menu
                             title_scale = settings.TITLE_SCALE
                             
-                            # Actualiser le meilleur score après avoir joué
+                            # Actualise le meilleur score après avoir joué
                             highscore = load_highscore()
                             
-                            # Properly update all sound settings when returning from game
+                            # Met à jour correctement tous les paramètres sonores lors du retour du jeu
                             update_sound_settings()
                         
                     elif next_scene == "options":
-                        print("Transitioning to Options scene")
+                        print("Transition vers la scène d'options")
                         in_transition = False
-                        # Call the options menu function
+                        # Appelle la fonction du menu des options
                         options_menu()
                         
-                        # Properly update all sound settings when returning from options
+                        # Met à jour correctement tous les paramètres sonores lors du retour des options
                         update_sound_settings()
                         
-                        # Make sure we reset the title scale
+                        # S'assure de réinitialiser l'échelle du titre
                         title_scale = settings.TITLE_SCALE
                         
                     elif next_scene == "exit":
-                        print("Exiting game")
-                        # End the game immediately when white flash starts on exit button press
+                        print("Quitter le jeu")
+                        # Termine le jeu immédiatement quand le flash blanc commence sur l'appui du bouton de sortie
                         running = False
                         
                     next_scene = None
                     in_transition = False
         
-        # Only check button hover states if not in transition
+        # Vérifie uniquement les états de survol des boutons si pas en transition
         if not in_transition and not waiting_for_elements_exit:
             play_button.check_hover(mouse_pos)
             options_button.check_hover(mouse_pos)
             exit_button.check_hover(mouse_pos)
             
-            # Check button hover for pixel animations
+            # Vérifie le survol des boutons pour les animations de pixels
             if pixel_animation.check_button_hover([play_button, options_button, exit_button]):
-                # Don't play sound on button hover - only show the particles
+                # Ne joue pas de son au survol des boutons - montre uniquement les particules
                 pass
         
-        # Always calculate title hover effect, even during transition to options
-        # Calculate title hover effect (moves up and down slightly)
-        time = pygame.time.get_ticks() / 1000  # Convert to seconds
+        # Toujours calculer l'effet de survol du titre, même pendant la transition vers les options
+        # Calcule l'effet de survol du titre (se déplace légèrement vers le haut et le bas)
+        time = pygame.time.get_ticks() / 1000  # Convertit en secondes
         title_y_offset = math.sin(time * settings.TITLE_HOVER_SPEED) * settings.TITLE_HOVER_AMPLITUDE
         
-        # Calculate title rect for hover detection
+        # Calcule le rectangle du titre pour la détection de survol
         base_title_rect = title_img.get_rect(
             center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION + title_y_offset)
         )
         
-        # Only check hover interaction and scaling if not in transition
+        # Vérifie l'interaction de survol et la mise à l'échelle uniquement si pas en transition
         if not in_transition and not waiting_for_elements_exit:
-            # Check if mouse is hovering over title
+            # Vérifie si la souris survole le titre
             if base_title_rect.collidepoint(mouse_pos):
                 title_hover = True
-                # Gradually increase scale up to max
+                # Augmente progressivement l'échelle jusqu'au maximum
                 title_scale = min(title_scale + settings.TITLE_SCALE_SPEED, settings.TITLE_MAX_SCALE)
             else:
                 title_hover = False
-                # Gradually decrease scale back to normal
+                # Diminue progressivement l'échelle pour revenir à la normale
                 title_scale = max(title_scale - settings.TITLE_SCALE_SPEED, settings.TITLE_SCALE)
         
-        # Scale the title image based on hover state
+        # Met à l'échelle l'image du titre en fonction de l'état de survol
         scaled_title_width = int(title_img.get_width() * title_scale)
         scaled_title_height = int(title_img.get_height() * title_scale)
         scaled_title = pygame.transform.scale(title_img, (scaled_title_width, scaled_title_height))
@@ -1044,14 +1062,14 @@ def main():
             center=(settings.TITLE_X_POSITION, settings.TITLE_Y_POSITION + title_y_offset)
         )
         
-        # Check if mouse is hovering over any buttons (excluding title)
+        # Vérifie si la souris survole un bouton quelconque (à l'exclusion du titre)
         hovering_button = (
             play_button.hovered or 
             options_button.hovered or 
             exit_button.hovered
         )
         
-        # Update cursor state with separate title hover parameter
+        # Met à jour l'état du curseur avec un paramètre de survol du titre distinct
         cursor_manager.update(
             mouse_pos, 
             pygame.mouse.get_pressed(), 
@@ -1060,70 +1078,70 @@ def main():
             mouse_in_window=mouse_in_window
         )
         
-        # Update pixel animation
+        # Met à jour l'animation de pixels
         pixel_animation.update(dt, settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
         
-        # Update screen flash animation
+        # Met à jour l'animation de flash d'écran
         screen_flash.update(dt)
         
-        # Draw
+        # Dessine
         screen.fill(settings.BLACK)
         
-        # Draw border as background (first layer) - always draw the border
+        # Dessine la bordure comme arrière-plan (première couche) - dessine toujours la bordure
         screen.blit(scaled_border_img, border_rect)
         
-        # Always draw the title if going to options menu
+        # Dessine toujours le titre si on va vers le menu des options
         if in_transition and next_scene == "options":
-            # Draw title with hover effect
+            # Dessine le titre avec l'effet de survol
             screen.blit(scaled_title, title_rect)
         
-        # Draw UI elements or transition animation
+        # Dessine les éléments de l'interface ou l'animation de transition
         if in_transition:
-            # If in transition, draw the border and transition elements
+            # Si en transition, dessine la bordure et les éléments de transition
             transition_animation.draw(screen)
         else:
-            # Draw regular UI if not in transition and not waiting for elements exit
+            # Dessine l'interface normale si pas en transition et pas en attente de sortie des éléments
             if not waiting_for_elements_exit:
-                # Draw title with hover effect
+                # Dessine le titre avec l'effet de survol
                 screen.blit(scaled_title, title_rect)
                 
-                # Draw buttons
+                # Dessine les boutons
                 play_button.draw(screen)
                 options_button.draw(screen)
                 exit_button.draw(screen)
                 
-                # Draw name image in foreground (last layer)
+                # Dessine l'image du nom au premier plan (dernière couche)
                 screen.blit(scaled_name_img, name_rect)
                 
-                # Afficher le meilleur score
+                # Affiche le meilleur score
                 if highscore_font:
                     highscore_text = highscore_font.render(f"HIGHSCORE LOCAL: {highscore}", True, settings.WHITE)
                     highscore_rect = highscore_text.get_rect(midtop=(settings.HIGHSCORE_X_POSITION, settings.HIGHSCORE_Y_POSITION))
                     
-                    # Afficher la couronne à gauche du texte du meilleur score
+                    # Affiche la couronne à gauche du texte du meilleur score
                     crown_rect = scaled_crown_img.get_rect(
                         midright=(highscore_rect.left - settings.CROWN_SPACING,
                                  highscore_rect.centery + settings.CROWN_Y_OFFSET)
                     )
                     screen.blit(scaled_crown_img, crown_rect)
                     
-                    # Afficher le texte du highscore après la couronne
+                    # Affiche le texte du highscore après la couronne
                     screen.blit(highscore_text, highscore_rect)
         
-        # Draw pixel animation (should be after UI elements but before cursor)
+        # Dessine l'animation de pixels (doit être après les éléments de l'interface mais avant le curseur)
         pixel_animation.draw(screen)
         
-        # Draw the custom cursor (should be last)
+        # Dessine le curseur personnalisé (doit être en dernier)
         cursor_manager.draw(screen)
         
-        # Draw screen flash (should be the very last thing to draw)
+        # Dessine le flash d'écran (doit être la toute dernière chose à dessiner)
         screen_flash.draw(screen)
         
-        # Update display
+        # Met à jour l'affichage
         pygame.display.flip()
         clock.tick(settings.FPS)
     
-    # Clean up before quitting
+    # Nettoie avant de quitter
     pygame.mixer.music.stop()
     pygame.quit()
     sys.exit()

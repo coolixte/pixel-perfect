@@ -8,6 +8,9 @@ from cursor_manager import CursorManager
 from pixel_animation import PixelAnimation
 from transition import TransitionAnimation
 
+# Logique du Jeu —————————————————————————————————————————————————————————————————————————————————————————
+# ————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 # Fonction utilitaire pour gérer les high scores
 def load_highscore():
     """
@@ -251,69 +254,69 @@ class GamePixel:
         
     def draw(self, surface):
         """
-        Draw the pixel on the given surface.
+        Dessine le pixel sur la surface donnée.
         
         Args:
-            surface (Surface): Pygame surface to draw on
+            surface (Surface): Surface Pygame sur laquelle dessiner
         """
-        # Only draw the pixel if it has some visibility
+        # Ne dessine le pixel que s'il a une certaine visibilité
         if (not self.is_blinking) or (self.is_blinking and self.is_visible):
             if self.alpha > 0:
                 surface.blit(self.image, self.rect)
         
     def check_collision(self, heart_rect):
         """
-        Check if the pixel is colliding with the heart.
+        Vérifie si le pixel est en collision avec le cœur.
         
         Args:
-            heart_rect (Rect): Pygame rectangle for the heart
+            heart_rect (Rect): Rectangle Pygame pour le cœur
             
         Returns:
-            bool: True if collision, False otherwise
+            bool: True si collision, False sinon
         """
         return self.rect.colliderect(heart_rect)
         
     def check_click(self, pos):
         """
-        Check if the pixel was clicked.
+        Vérifie si le pixel a été cliqué.
         
         Args:
-            pos (tuple): Mouse position (x, y)
+            pos (tuple): Position de la souris (x, y)
             
         Returns:
-            bool: True if clicked, False otherwise
+            bool: True si cliqué, False sinon
         """
         return self.rect.collidepoint(pos)
         
     def mark_as_dead(self):
-        """Mark the pixel as dead so it will be removed in the next update."""
+        """Marque le pixel comme mort pour qu'il soit supprimé lors de la prochaine mise à jour."""
         self.dead = True
 
 class Game:
-    """Main game class that manages the game state and logic."""
+    """Classe principale du jeu qui gère l'état et la logique du jeu."""
     def __init__(self, screen, skip_entry_flash=False, music_enabled=True, sound_effects_enabled=True):
         """
-        Initialize the game.
+        Initialise le jeu.
         
         Args:
-            screen (Surface): Pygame surface to draw on
-            skip_entry_flash (bool): If True, skip the initial fade in effect
-            music_enabled (bool): If False, disable music
-            sound_effects_enabled (bool): If False, disable sound effects
+            screen (Surface): Surface Pygame sur laquelle dessiner
+            skip_entry_flash (bool): Si True, ignore l'effet de fondu initial
+            music_enabled (bool): Si False, désactive la musique
+            sound_effects_enabled (bool): Si False, désactive les effets sonores
         """
         self.screen = screen
         self.skip_entry_flash = skip_entry_flash
         self.music_enabled = music_enabled
         self.sound_effects_enabled = sound_effects_enabled
         self.running = True
-        self.return_to_menu = False  # Flag to indicate whether to return to menu
-        self.game_over_pending = False  # Flag to track delayed game over transition
+        self.return_to_menu = False  # Indicateur pour retourner au menu
+        self.game_over_pending = False  # Indicateur pour suivre la transition différée de fin de jeu
         
-        # Score system
+        # Système de score
         self.score = 0
         self.highscore = load_highscore()
         
-        # Initialize font for score display
+        # Initialise la police pour l'affichage du score
         pygame.font.init()
         try:
             self.font = pygame.font.SysFont(settings.SCORE_FONT_NAME, settings.SCORE_FONT_SIZE, bold=settings.SCORE_FONT_BOLD)
@@ -321,48 +324,48 @@ class Game:
             print(f"Erreur lors du chargement de la police: {e}")
             self.font = None
         
-        # Fade in state
+        # État de fondu à l'entrée
         self.fading_in = skip_entry_flash
         self.fade_timer = 0
-        self.fade_duration = settings.FLASH_DURATION  # Reuse flash duration
+        self.fade_duration = settings.FLASH_DURATION  # Réutilise la durée du flash
         
-        # Exit transition state
+        # État de transition de sortie
         self.exiting = False
         self.exit_timer = 0
         self.exit_fade_timer = 0
-        self.exit_elements = []  # Elements to animate when exiting
+        self.exit_elements = []  # Éléments à animer lors de la sortie
         
-        # Initialize pixel animation (for effects)
-        self.pixel_animation = PixelAnimation(auto_spawn=False)  # Disable auto spawning for game scene
+        # Initialise l'animation de pixel (pour les effets)
+        self.pixel_animation = PixelAnimation(auto_spawn=False)  # Désactive l'apparition automatique pour la scène de jeu
         
-        # Initialize cursor manager
+        # Initialise le gestionnaire de curseur
         self.cursor_manager = CursorManager()
         
-        # Load sounds
+        # Charge les sons
         self.load_sounds()
         
-        # Start game background music
+        # Démarre la musique de fond du jeu
         self.start_background_music()
         
-        # Load exit button images
+        # Charge les images du bouton de sortie
         try:
             self.exit_normal = pygame.image.load(os.path.join(settings.ASSETS_DIR, "ExitIcon.png"))
             self.exit_click = pygame.image.load(os.path.join(settings.ASSETS_DIR, "ExitIconClick.png"))
             
-            # Scale button using settings
+            # Redimensionne le bouton en utilisant les paramètres
             scale = settings.GAME_EXIT_ICON_SCALE
             orig_size = self.exit_normal.get_size()
             new_size = (int(orig_size[0] * scale), int(orig_size[1] * scale))
             self.exit_normal = pygame.transform.scale(self.exit_normal, new_size)
             self.exit_click = pygame.transform.scale(self.exit_click, new_size)
             
-            # Create hover version with darkening effect
+            # Crée une version survolée avec un effet d'assombrissement
             self.exit_hover = self.exit_normal.copy()
             dark_surface = pygame.Surface(self.exit_hover.get_size(), pygame.SRCALPHA)
-            dark_surface.fill((0, 0, 0, settings.HOVER_DARKNESS))  # Semi-transparent black
+            dark_surface.fill((0, 0, 0, settings.HOVER_DARKNESS))  # Noir semi-transparent
             self.exit_hover.blit(dark_surface, (0, 0))
             
-            # Position the button using the absolute position settings
+            # Positionne le bouton en utilisant les paramètres de position absolue
             self.exit_rect = self.exit_normal.get_rect(
                 midbottom=(settings.GAME_EXIT_ICON_X_POSITION, settings.GAME_EXIT_ICON_Y_POSITION)
             )
@@ -370,12 +373,12 @@ class Game:
             self.exit_clicked = False
             self.exit_hovered = False
         except pygame.error as e:
-            print(f"Error loading exit button images: {e}")
+            print(f"Erreur lors du chargement des images du bouton de sortie: {e}")
             self.exit_normal = None
             self.exit_click = None
             self.exit_hover = None
         
-        # Load border image from main menu
+        # Charge l'image de bordure du menu principal
         try:
             self.border_img = pygame.image.load(os.path.join(settings.ASSETS_DIR, "fullborder.png"))
             original_border_size = self.border_img.get_size()
@@ -388,10 +391,10 @@ class Game:
                 center=(settings.BORDER_X_POSITION, settings.BORDER_Y_POSITION)
             )
         except pygame.error as e:
-            print(f"Error loading border image: {e}")
+            print(f"Erreur lors du chargement de l'image de bordure: {e}")
             self.scaled_border_img = None
         
-        # Load heart base image
+        # Charge l'image de base du cœur
         try:
             self.base_img = pygame.image.load(os.path.join(settings.ASSETS_DIR, "base.png"))
             original_base_size = self.base_img.get_size()
@@ -401,16 +404,16 @@ class Game:
             )
             self.scaled_base_img = pygame.transform.scale(self.base_img, scaled_base_size)
         except pygame.error as e:
-            print(f"Error loading base image: {e}")
+            print(f"Erreur lors du chargement de l'image de base: {e}")
             self.scaled_base_img = None
         
-        # Load heart images
+        # Charge les images du cœur
         self.heart_images = []
-        for i in range(1, 6):  # heart_1.png to heart_5.png - now all with consistent naming
+        for i in range(1, 6):  # heart_1.png à heart_5.png - maintenant avec une nomenclature cohérente
             filename = f"heart_{i}.png"
             try:
                 image = pygame.image.load(os.path.join(settings.ASSETS_DIR, filename))
-                # Scale the image using the HEART_SCALE setting
+                # Redimensionne l'image en utilisant le paramètre HEART_SCALE
                 original_size = image.get_size()
                 scaled_size = (
                     int(original_size[0] * settings.HEART_SCALE),
@@ -418,138 +421,138 @@ class Game:
                 )
                 self.heart_images.append(pygame.transform.scale(image, scaled_size))
             except pygame.error as e:
-                print(f"Error loading heart image {filename}: {e}")
-                # Fallback to previous heart if available
+                print(f"Erreur lors du chargement de l'image de cœur {filename}: {e}")
+                # Repli sur le cœur précédent si disponible
                 if i > 1 and len(self.heart_images) > 0:
                     self.heart_images.append(self.heart_images[-1])
                 else:
-                    # Create a placeholder heart (scaled appropriately)
-                    placeholder_size = 100  # Base size before scaling
+                    # Crée un cœur de remplacement (redimensionné de manière appropriée)
+                    placeholder_size = 100  # Taille de base avant mise à l'échelle
                     placeholder = pygame.Surface((placeholder_size, placeholder_size))
-                    placeholder.fill((255, 0, 0))  # Red square as placeholder
+                    placeholder.fill((255, 0, 0))  # Carré rouge comme placeholder
                     scaled_size = (
                         int(placeholder_size * settings.HEART_SCALE),
                         int(placeholder_size * settings.HEART_SCALE)
                     )
                     self.heart_images.append(pygame.transform.scale(placeholder, scaled_size))
             
-        # Set up heart
+        # Configure le cœur
         self.lives = settings.INITIAL_LIVES
-        self.heart_image = self.heart_images[0]  # Start with the first heart image
+        self.heart_image = self.heart_images[0]  # Commence avec la première image de cœur
         self.heart_rect = self.heart_image.get_rect(
             center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
         )
         
-        # Set up game pixels
+        # Configure les pixels de jeu
         self.pixels = []
         self.last_spawn_time = 0
         self.spawn_interval = settings.GAME_PIXEL_SPAWN_INTERVAL
         self.pixel_base_speed = settings.GAME_PIXEL_BASE_SPEED
         self.difficulty_timer = 0
         
-        # Mouse state
+        # État de la souris
         self.mouse_in_window = True
         
     def load_sounds(self):
-        """Load all game sound effects."""
-        # Initialize sound objects to None
+        """Charge tous les effets sonores du jeu."""
+        # Initialise les objets sonores à None
         self.explode_sound = None
         self.death_sound = None
         self.collect_sound = None
         self.game_over_sound = None
         
         try:
-            # Load explode sound
+            # Charge le son d'explosion
             explode_path = os.path.join(settings.ASSETS_DIR, "explode.mp3")
             if os.path.exists(explode_path):
                 self.explode_sound = pygame.mixer.Sound(explode_path)
                 self.explode_sound.set_volume(settings.EXPLOSION_VOLUME)
             else:
-                print(f"Warning: Sound file '{explode_path}' not found.")
+                print(f"Avertissement: Fichier son '{explode_path}' non trouvé.")
             
-            # Load death sound
+            # Charge le son de mort
             death_path = os.path.join(settings.ASSETS_DIR, "death.mp3")
             if os.path.exists(death_path):
                 self.death_sound = pygame.mixer.Sound(death_path)
                 self.death_sound.set_volume(settings.DEATH_VOLUME)
             else:
-                print(f"Warning: Sound file '{death_path}' not found.")
+                print(f"Avertissement: Fichier son '{death_path}' non trouvé.")
                 
-            # Load collect sound
+            # Charge le son de collecte
             collect_path = os.path.join(settings.ASSETS_DIR, "collect.mp3")
             if os.path.exists(collect_path):
                 self.collect_sound = pygame.mixer.Sound(collect_path)
                 self.collect_sound.set_volume(settings.COLLECT_VOLUME)
             else:
-                print(f"Warning: Sound file '{collect_path}' not found.")
+                print(f"Avertissement: Fichier son '{collect_path}' non trouvé.")
             
-            # Load game-over sound
+            # Charge le son de game-over
             game_over_path = os.path.join(settings.ASSETS_DIR, "game-over.mp3")
             if os.path.exists(game_over_path):
                 self.game_over_sound = pygame.mixer.Sound(game_over_path)
-                self.game_over_sound.set_volume(settings.GAME_OVER_VOLUME)  # Use the dedicated game over volume
+                self.game_over_sound.set_volume(settings.GAME_OVER_VOLUME)  # Utilise le volume dédié au game over
             else:
-                print(f"Warning: Sound file '{game_over_path}' not found.")
+                print(f"Avertissement: Fichier son '{game_over_path}' non trouvé.")
                 
         except pygame.error as e:
-            print(f"Error loading sound effects: {e}")
+            print(f"Erreur lors du chargement des effets sonores: {e}")
     
     def start_background_music(self):
-        """Start the background music for the game."""
-        # Only play music if enabled
+        """Démarre la musique de fond pour le jeu."""
+        # Ne joue la musique que si elle est activée
         if self.music_enabled:
             try:
-                # Stop any existing music
+                # Arrête toute musique existante
                 pygame.mixer.music.stop()
                 
-                # Load and play game background music
+                # Charge et joue la musique de fond du jeu
                 bg_music_path = os.path.join(settings.ASSETS_DIR, "game-song.mp3")
                 if os.path.exists(bg_music_path):
                     pygame.mixer.music.load(bg_music_path)
-                    pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Use the setting value
-                    pygame.mixer.music.play(-1)  # -1 means loop indefinitely
+                    pygame.mixer.music.set_volume(settings.MUSIC_VOLUME)  # Utilise la valeur du paramètre
+                    pygame.mixer.music.play(-1)  # -1 signifie boucler indéfiniment
                 else:
-                    print(f"Warning: Game background music file '{bg_music_path}' not found.")
+                    print(f"Avertissement: Fichier de musique de fond du jeu '{bg_music_path}' non trouvé.")
             except pygame.error as e:
-                print(f"Error loading game background music: {e}")
+                print(f"Erreur lors du chargement de la musique de fond du jeu: {e}")
     
     def spawn_pixel(self):
-        """Spawn a new pixel at the edge of the screen but inside the border."""
-        # Calculate border boundaries
+        """Fait apparaître un nouveau pixel au bord de l'écran mais à l'intérieur de la bordure."""
+        # Calcule les limites de la bordure
         if hasattr(self, 'border_rect') and self.border_rect:
-            border_left = self.border_rect.left + 20  # Add padding
+            border_left = self.border_rect.left + 20  # Ajoute un rembourrage
             border_right = self.border_rect.right - 20
             border_top = self.border_rect.top + 20
             border_bottom = self.border_rect.bottom - 20
         else:
-            # Fallback to screen boundaries with padding
+            # Repli sur les limites de l'écran avec rembourrage
             border_left = 20
             border_right = settings.SCREEN_WIDTH - 20
             border_top = 20
             border_bottom = settings.SCREEN_HEIGHT - 20
         
-        # Randomly choose which side to spawn from (0=top, 1=right, 2=bottom, 3=left)
+        # Choisit aléatoirement de quel côté apparaître (0=haut, 1=droite, 2=bas, 3=gauche)
         side = random.randint(0, 3)
         
-        # Calculate position based on the chosen side but within border
-        if side == 0:  # Top
+        # Calcule la position en fonction du côté choisi mais à l'intérieur de la bordure
+        if side == 0:  # Haut
             x = random.randint(border_left, border_right)
             y = border_top
-            angle = math.pi / 2  # Downward
-        elif side == 1:  # Right
+            angle = math.pi / 2  # Vers le bas
+        elif side == 1:  # Droite
             x = border_right
             y = random.randint(border_top, border_bottom)
-            angle = math.pi  # Leftward
-        elif side == 2:  # Bottom
+            angle = math.pi  # Vers la gauche
+        elif side == 2:  # Bas
             x = random.randint(border_left, border_right)
             y = border_bottom
-            angle = 3 * math.pi / 2  # Upward
-        else:  # Left
+            angle = 3 * math.pi / 2  # Vers le haut
+        else:  # Gauche
             x = border_left
             y = random.randint(border_top, border_bottom)
-            angle = 0  # Rightward
+            angle = 0  # Vers la droite
             
-        # Randomly determine pixel type based on spawn odds
+        # Détermine aléatoirement le type de pixel en fonction des probabilités d'apparition
         roll = random.randint(1, 100)
         if roll <= settings.RED_PIXEL_ODDS:
             pixel_type = "red"
@@ -560,56 +563,56 @@ class Game:
         else:
             pixel_type = "white"
             
-        # Randomly determine pixel size
+        # Détermine aléatoirement la taille du pixel
         size = random.randint(settings.GAME_PIXEL_MIN_SIZE, settings.GAME_PIXEL_MAX_SIZE)
         
-        # Create and add the pixel
+        # Crée et ajoute le pixel
         pixel = GamePixel(x, y, angle, size, pixel_type)
-        pixel.speed = self.pixel_base_speed  # Set the current base speed
+        pixel.speed = self.pixel_base_speed  # Définit la vitesse de base actuelle
         self.pixels.append(pixel)
         
     def spawn_orange_splash(self, x, y):
         """
-        Spawn exactly two white pixels away from heart when an orange pixel is clicked.
+        Fait apparaître exactement deux pixels blancs s'éloignant du cœur lorsqu'un pixel orange est cliqué.
         
         Args:
-            x (float): X position of the orange pixel
-            y (float): Y position of the orange pixel
+            x (float): Position X du pixel orange
+            y (float): Position Y du pixel orange
         """
         heart_x = settings.HEART_X_POSITION
         heart_y = settings.HEART_Y_POSITION
         
-        # Calculate direction vector from heart to the orange pixel
+        # Calcule le vecteur de direction du cœur vers le pixel orange
         dx = x - heart_x
         dy = y - heart_y
         
-        # Get the distance from heart to the orange pixel
+        # Obtient la distance du cœur au pixel orange
         distance = math.sqrt(dx*dx + dy*dy)
         
-        # Only proceed if we have a valid direction (not at the heart)
+        # Ne procède que si nous avons une direction valide (pas au cœur)
         if distance > 0:
-            # Normalize the direction vector
+            # Normalise le vecteur de direction
             dx /= distance
             dy /= distance
             
-            # Always spawn exactly 2 white pixels
+            # Fait toujours apparaître exactement 2 pixels blancs
             for i in range(2):
-                # Vary the angle slightly for each pixel
+                # Varie légèrement l'angle pour chaque pixel
                 if i == 0:
-                    angle_offset = random.uniform(-math.pi/6, 0)  # -30 to 0 degrees
+                    angle_offset = random.uniform(-math.pi/6, 0)  # -30 à 0 degrés
                 else:
-                    angle_offset = random.uniform(0, math.pi/6)  # 0 to 30 degrees
+                    angle_offset = random.uniform(0, math.pi/6)  # 0 à 30 degrés
                     
                 angle = math.atan2(dy, dx) + angle_offset
                 dir_x = math.cos(angle)
                 dir_y = math.sin(angle)
                 
-                # Calculate spawn position farther away from the heart than orange pixel
-                additional_distance = settings.ORANGE_SPLASH_RADIUS * 1.5  # Make sure they're far away
+                # Calcule la position d'apparition plus loin du cœur que le pixel orange
+                additional_distance = settings.ORANGE_SPLASH_RADIUS * 1.5  # S'assure qu'ils sont loin
                 spawn_x = x + dir_x * additional_distance
                 spawn_y = y + dir_y * additional_distance
                 
-                # Clamp to screen boundaries while ensuring they're inside the border
+                # Limite aux limites de l'écran tout en s'assurant qu'ils sont à l'intérieur de la bordure
                 if hasattr(self, 'border_rect') and self.border_rect:
                     border_left = self.border_rect.left + 20
                     border_right = self.border_rect.right - 20
@@ -624,52 +627,52 @@ class Game:
                 spawn_x = max(border_left, min(spawn_x, border_right))
                 spawn_y = max(border_top, min(spawn_y, border_bottom))
                 
-                # Random size
+                # Taille aléatoire
                 size = random.randint(settings.GAME_PIXEL_MIN_SIZE, settings.GAME_PIXEL_MAX_SIZE)
                 
-                # Create and add white pixel (not orange)
+                # Crée et ajoute un pixel blanc (pas orange)
                 pixel = GamePixel(spawn_x, spawn_y, angle, size, "white")
                 
-                # Make these white pixels slightly slower than normal to give player time to react
+                # Rend ces pixels blancs légèrement plus lents que la normale pour donner au joueur le temps de réagir
                 pixel.speed = self.pixel_base_speed * 0.6
                 self.pixels.append(pixel)
     
     def lose_life(self):
-        """Reduce player's lives by 1 and update heart image."""
+        """Réduit les vies du joueur de 1 et met à jour l'image du cœur."""
         self.lives -= 1
         
-        # Play death sound when losing a life
+        # Joue le son de mort lors de la perte d'une vie
         self.play_sound(self.death_sound)
         
-        # Create red pixel animation on the heart when losing a life
-        for _ in range(15):  # Create 15 particles
-            # Random positions around the heart center
+        # Crée une animation de pixels rouges sur le cœur lors de la perte d'une vie
+        for _ in range(15):  # Crée 15 particules
+            # Positions aléatoires autour du centre du cœur
             particle_x = settings.HEART_X_POSITION + random.uniform(-20, 20)
             particle_y = settings.HEART_Y_POSITION + random.uniform(-20, 20)
             self.pixel_animation.spawn_particles(particle_x, particle_y, color="red")
         
-        # Check for game over
+        # Vérifie la fin de partie
         if self.lives <= 0:
             self.lives = 0
             print("Game Over!")
-            # Start the game over transition
+            # Commence la transition de fin de jeu
             self.trigger_game_over(from_red_pixel=False)
             
-        # Update heart image (heart_1.png to heart_5.png based on damage)
+        # Met à jour l'image du cœur (heart_1.png à heart_5.png en fonction des dégâts)
         damage_level = 5 - self.lives
         if damage_level >= 0 and damage_level < 5:
             self.heart_image = self.heart_images[damage_level]
-        # When all lives are lost, ensure we show the most damaged heart
+        # Quand toutes les vies sont perdues, s'assure d'afficher le cœur le plus endommagé
         elif damage_level >= 5:
-            self.heart_image = self.heart_images[4]  # Last heart image (most damaged)
+            self.heart_image = self.heart_images[4]  # Dernière image de cœur (la plus endommagée)
     
     def apply_powerup(self):
-        """Apply a random power-up effect."""
-        # For now, just implement a simple powerup that removes some pixels
+        """Applique un effet de power-up aléatoire."""
+        # Pour l'instant, implémente simplement un powerup qui supprime quelques pixels
         powerup_type = random.choice(["clear_pixels", "slow_pixels", "extra_life"])
         
         if powerup_type == "clear_pixels":
-            # Remove half of the white pixels
+            # Supprime la moitié des pixels blancs
             white_pixels = [p for p in self.pixels if p.type == "white"]
             if white_pixels:
                 for _ in range(len(white_pixels) // 2):
@@ -679,12 +682,12 @@ class Game:
                         white_pixels.remove(pixel)
                         
         elif powerup_type == "slow_pixels":
-            # Slow down all pixels temporarily
+            # Ralentit tous les pixels temporairement
             for pixel in self.pixels:
                 pixel.speed *= 0.5
                 
         elif powerup_type == "extra_life":
-            # Add an extra life if not at max
+            # Ajoute une vie supplémentaire si pas au maximum
             if self.lives < 5:
                 self.lives += 1
                 damage_level = 5 - self.lives
@@ -692,16 +695,16 @@ class Game:
     
     def trigger_game_over(self, from_red_pixel=False):
         """
-        Trigger game over sequence with transition animation back to menu.
+        Déclenche la séquence de fin de jeu avec animation de transition vers le menu.
         
         Args:
-            from_red_pixel (bool): Whether game over was triggered by clicking a red pixel
+            from_red_pixel (bool): Si la fin de jeu a été déclenchée en cliquant sur un pixel rouge
         """
-        # Play game over sound
+        # Joue le son de game over
         self.play_sound(self.game_over_sound)
             
-        # Create particle effects at the heart position
-        # Use more particles if triggered by red pixel for a more dramatic effect
+        # Crée des effets de particules à la position du cœur
+        # Utilise plus de particules si déclenché par un pixel rouge pour un effet plus dramatique
         particle_count = 40 if from_red_pixel else 30
         particle_spread = 40 if from_red_pixel else 30
         
@@ -710,8 +713,8 @@ class Game:
             particle_y = settings.HEART_Y_POSITION + random.uniform(-particle_spread, particle_spread)
             self.pixel_animation.spawn_particles(particle_x, particle_y, color="red")
             
-        # Start exit transition after a short delay to let the player see the game over state
-        pygame.time.set_timer(pygame.USEREVENT, 1500)  # 1.5 second delay
+        # Commence la transition de sortie après un court délai pour laisser le joueur voir l'état de fin de jeu
+        pygame.time.set_timer(pygame.USEREVENT, 1500)  # Délai de 1,5 seconde
         self.game_over_pending = True
     
     def add_score(self, points):
@@ -728,8 +731,8 @@ class Game:
             save_highscore(self.highscore)
     
     def handle_events(self):
-        """Handle game events."""
-        # If in exiting state, don't process any events
+        """Gère les événements du jeu."""
+        # Si dans l'état de sortie, ne traite aucun événement
         if self.exiting:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -737,16 +740,16 @@ class Game:
                     return False
             return True
         
-        # Normal event handling
+        # Gestion normale des événements
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
                 return False
                 
-            # Check for delayed game over transition
+            # Vérifie la transition de fin de jeu différée
             elif event.type == pygame.USEREVENT:
                 if hasattr(self, 'game_over_pending') and self.game_over_pending:
-                    pygame.time.set_timer(pygame.USEREVENT, 0)  # Cancel the timer
+                    pygame.time.set_timer(pygame.USEREVENT, 0)  # Annule le minuteur
                     self.game_over_pending = False
                     # Sauvegarde le high score avant de quitter
                     if self.score > self.highscore:
@@ -755,11 +758,11 @@ class Game:
                     self.start_exit_transition()
                 
             elif event.type == pygame.MOUSEMOTION:
-                # Check if mouse is inside the window
+                # Vérifie si la souris est à l'intérieur de la fenêtre
                 x, y = event.pos
                 self.mouse_in_window = (0 <= x < settings.SCREEN_WIDTH and 0 <= y < settings.SCREEN_HEIGHT)
                 
-                # Check if mouse is hovering over exit button
+                # Vérifie si la souris survole le bouton de sortie
                 if hasattr(self, 'exit_rect') and self.exit_rect and self.exit_rect.collidepoint(event.pos):
                     self.exit_hovered = True
                     if not self.exit_clicked:
@@ -770,26 +773,26 @@ class Game:
                         self.exit_image = self.exit_normal
             
             elif event.type == pygame.ACTIVEEVENT:
-                # Handle window focus/unfocus events
-                if event.gain == 0 and event.state == 1:  # Mouse left the window
+                # Gère les événements de focus/perte de focus de la fenêtre
+                if event.gain == 0 and event.state == 1:  # La souris a quitté la fenêtre
                     self.mouse_in_window = False
-                elif event.gain == 1 and event.state == 1:  # Mouse entered the window
+                elif event.gain == 1 and event.state == 1:  # La souris est entrée dans la fenêtre
                     self.mouse_in_window = True
                     
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Left mouse button
-                    # Check if we clicked on an interactive element
+                if event.button == 1:  # Bouton gauche de la souris
+                    # Vérifie si nous avons cliqué sur un élément interactif
                     clicked_on_interactive = False
-                    clicked_pixel = None  # Initialize clicked_pixel to avoid UnboundLocalError
+                    clicked_pixel = None  # Initialise clicked_pixel pour éviter UnboundLocalError
                     
-                    # Check if exit button was clicked
+                    # Vérifie si le bouton de sortie a été cliqué
                     if hasattr(self, 'exit_rect') and self.exit_rect and self.exit_rect.collidepoint(event.pos):
                         clicked_on_interactive = True
                         self.exit_clicked = True
                         self.exit_image = self.exit_click
-                        # Don't return immediately, let the button click be visible
+                        # Ne retourne pas immédiatement, laisse le clic du bouton être visible
                     else:
-                        # Check for pixel clicks
+                        # Vérifie les clics sur les pixels
                         for pixel in self.pixels:
                             if pixel.check_click(event.pos):
                                 clicked_pixel = pixel
@@ -797,68 +800,68 @@ class Game:
                                 break
                                 
                         if clicked_pixel:
-                            # Play explode sound for pixel clicks
+                            # Joue le son d'explosion pour les clics de pixel
                             if hasattr(self, 'explode_sound') and self.explode_sound:
                                 self.play_sound(self.explode_sound)
                                 
                             if clicked_pixel.type == "white":
-                                # White pixel: destroy and create animation
+                                # Pixel blanc : détruit et crée une animation
                                 clicked_pixel.mark_as_dead()
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="white")
-                                # Ajouter 1 point pour un pixel blanc détruit
+                                # Ajoute 1 point pour un pixel blanc détruit
                                 self.add_score(settings.WHITE_PIXEL_POINTS)
                                 
                             elif clicked_pixel.type == "red":
-                                # Red pixel: game over
-                                print("Red pixel clicked! Game Over!")
-                                self.lives = 0  # Set lives to 0
-                                self.heart_image = self.heart_images[4]  # Most damaged heart
-                                # Create a larger red explosion effect
+                                # Pixel rouge : fin de jeu
+                                print("Pixel rouge cliqué! Game Over!")
+                                self.lives = 0  # Met les vies à 0
+                                self.heart_image = self.heart_images[4]  # Cœur le plus endommagé
+                                # Crée un effet d'explosion rouge plus grand
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="red", count=20)
-                                # Remove the clicked pixel
+                                # Supprime le pixel cliqué
                                 clicked_pixel.mark_as_dead()
-                                # Ajouter des points pour avoir cliqué sur un pixel rouge
+                                # Ajoute des points pour avoir cliqué sur un pixel rouge
                                 self.add_score(settings.RED_PIXEL_BASE_POINTS)
-                                # Trigger the game over sequence
+                                # Déclenche la séquence de fin de jeu
                                 self.trigger_game_over(from_red_pixel=True)
                                 
                             elif clicked_pixel.type == "green":
-                                # Green pixel: power-up and pop all white and orange pixels
+                                # Pixel vert : power-up et fait éclater tous les pixels blancs et orange
                                 clicked_pixel.mark_as_dead()
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="green")
                                 
-                                # Play collect sound for green pixel
+                                # Joue le son de collecte pour le pixel vert
                                 if hasattr(self, 'collect_sound') and self.collect_sound:
                                     self.play_sound(self.collect_sound)
                                 
                                 self.apply_powerup()
                                 
-                                # Pop all white and orange pixels
-                                for other_pixel in list(self.pixels):  # Make a copy of the list to iterate safely
+                                # Fait éclater tous les pixels blancs et orange
+                                for other_pixel in list(self.pixels):  # Crée une copie de la liste pour itérer en toute sécurité
                                     if other_pixel.type in ["white", "orange"] and other_pixel != clicked_pixel:
                                         self.pixel_animation.spawn_particles(other_pixel.x, other_pixel.y, color=other_pixel.type)
                                         other_pixel.mark_as_dead()
-                                        # Ajouter des points pour chaque pixel détruit
+                                        # Ajoute des points pour chaque pixel détruit
                                         if other_pixel.type == "white":
                                             self.add_score(settings.WHITE_PIXEL_POINTS)
                                         elif other_pixel.type == "orange":
                                             self.add_score(settings.ORANGE_PIXEL_POINTS)
                             
                             elif clicked_pixel.type == "orange":
-                                # Orange pixel: destroy and spawn white pixels in opposite direction from heart
+                                # Pixel orange : détruit et fait apparaître des pixels blancs dans la direction opposée au cœur
                                 self.pixel_animation.spawn_particles(clicked_pixel.x, clicked_pixel.y, color="orange")
                                 self.spawn_orange_splash(clicked_pixel.x, clicked_pixel.y)
                                 clicked_pixel.mark_as_dead()
-                                # Ajouter 3 points pour un pixel orange détruit
+                                # Ajoute 3 points pour un pixel orange détruit
                                 self.add_score(settings.ORANGE_PIXEL_POINTS)
                     
-                    # If clicked on an interactive element like a button or pixel, play explode sound
+                    # Si cliqué sur un élément interactif comme un bouton ou un pixel, joue le son d'explosion
                     if clicked_on_interactive and not clicked_pixel and hasattr(self, 'explode_sound') and self.explode_sound:
                         self.play_sound(self.explode_sound)
             
             elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:  # Left mouse button release
-                    # Check if exit button was clicked and released
+                if event.button == 1:  # Relâchement du bouton gauche de la souris
+                    # Vérifie si le bouton de sortie a été cliqué et relâché
                     if self.exit_clicked:
                         self.exit_clicked = False
                         if self.exit_hovered:
@@ -866,9 +869,9 @@ class Game:
                         else:
                             self.exit_image = self.exit_normal
                         
-                        # Check if mouse is still over the button
+                        # Vérifie si la souris est toujours sur le bouton
                         if hasattr(self, 'exit_rect') and self.exit_rect and self.exit_rect.collidepoint(event.pos):
-                            print("Returning to main menu")
+                            print("Retour au menu principal")
                             # Sauvegarde le high score avant de quitter
                             if self.score > self.highscore:
                                 self.highscore = self.score
@@ -878,7 +881,7 @@ class Game:
         return True
     
     def start_exit_transition(self):
-        """Start the transition animation when exiting to the menu."""
+        """Démarre l'animation de transition lors de la sortie vers le menu."""
         self.exiting = True
         self.exit_timer = 0
         self.exit_fade_timer = 0
@@ -886,62 +889,62 @@ class Game:
         # Arrêter complètement la musique du jeu au lieu de simplement la faire disparaître
         try:
             # Utiliser fadeout pour une transition douce, mais s'assurer que la musique est arrêtée
-            pygame.mixer.music.fadeout(500)  # Fade out over 500ms
+            pygame.mixer.music.fadeout(500)  # Fondu sortant sur 500ms
             # Ajout d'un arrêt complet après le fadeout pour être sûr
             pygame.mixer.music.stop()
         except pygame.error as e:
-            print(f"Error fading out game music: {e}")
+            print(f"Erreur lors du fondu sortant de la musique du jeu: {e}")
         
-        # Collect all visible elements for the transition
+        # Collecte tous les éléments visibles pour la transition
         self.exit_elements = []
         
-        # Add base (if it exists)
+        # Ajoute la base (si elle existe)
         if hasattr(self, 'scaled_base_img') and self.scaled_base_img is not None:
             base_rect = self.scaled_base_img.get_rect(
                 center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
             )
             self.exit_elements.append((self.scaled_base_img, base_rect))
         
-        # Add heart
+        # Ajoute le cœur
         if hasattr(self, 'heart_image') and self.heart_image:
             self.exit_elements.append((self.heart_image, self.heart_rect))
         
-        # Add exit button
+        # Ajoute le bouton de sortie
         if hasattr(self, 'exit_image') and self.exit_image:
             self.exit_elements.append((self.exit_image, self.exit_rect))
         
-        # Add pixels as elements
+        # Ajoute les pixels comme éléments
         for pixel in self.pixels:
             if hasattr(pixel, 'image') and pixel.image and hasattr(pixel, 'rect') and pixel.rect:
                 self.exit_elements.append((pixel.image, pixel.rect))
         
-        # Create TransitionAnimation for the exit
+        # Crée TransitionAnimation pour la sortie
         self.exit_transition = TransitionAnimation()
         self.exit_transition.start(self.exit_elements)
     
     def update(self, dt):
         """
-        Update game state.
+        Met à jour l'état du jeu.
         
         Args:
-            dt (float): Time delta in seconds
+            dt (float): Delta temps en secondes
         """
-        # Handle exit transition
+        # Gère la transition de sortie
         if self.exiting:
             self.exit_timer += dt
             
-            # First phase: elements fall off screen
+            # Première phase : les éléments tombent hors de l'écran
             if self.exit_timer < settings.TRANSITION_DURATION:
-                # Update transition animation
+                # Met à jour l'animation de transition
                 still_active = self.exit_transition.update(dt)
                 
-                # If transition is complete, immediately start the white flash
+                # Si la transition est terminée, commence immédiatement le flash blanc
                 if not still_active and self.exit_transition.all_elements_exited_screen():
-                    # Skip to the flash phase
+                    # Passe à la phase de flash
                     self.exit_timer = settings.TRANSITION_DURATION
                     self.exit_fade_timer = 0
                 
-                # Update cursor
+                # Met à jour le curseur
                 mouse_pos = pygame.mouse.get_pos()
                 self.cursor_manager.update(
                     mouse_pos, 
@@ -952,13 +955,13 @@ class Game:
                     game_mode=True
                 )
                 
-            # Second phase: white flash
+            # Deuxième phase : flash blanc
             elif self.exit_timer >= settings.TRANSITION_DURATION and self.exit_fade_timer < settings.FLASH_DURATION:
                 self.exit_fade_timer += dt
                 
-                # Return to menu immediately when the flash starts
-                if self.exit_fade_timer < 0.05:  # Just started the flash
-                    # S'assurer que toute la musique est arrêtée avant de retourner au menu
+                # Retourne au menu immédiatement lorsque le flash commence
+                if self.exit_fade_timer < 0.05:  # Vient de commencer le flash
+                    # S'assure que toute la musique est arrêtée avant de retourner au menu
                     try:
                         pygame.mixer.music.stop()
                     except pygame.error:
@@ -968,13 +971,13 @@ class Game:
                 
             return
         
-        # Handle fade-in effect
+        # Gère l'effet de fondu à l'entrée
         if self.fading_in:
             self.fade_timer += dt
             if self.fade_timer >= self.fade_duration:
                 self.fading_in = False
         
-        # Update mouse cursor
+        # Met à jour le curseur de la souris
         mouse_pos = pygame.mouse.get_pos()
         self.cursor_manager.update(
             mouse_pos, 
@@ -985,16 +988,16 @@ class Game:
             game_mode=True
         )
         
-        # Don't update game state during fade-in
+        # Ne met pas à jour l'état du jeu pendant le fondu à l'entrée
         if self.fading_in:
-            # Only update animations during fade-in
+            # Met à jour uniquement les animations pendant le fondu à l'entrée
             self.pixel_animation.update(dt, settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
             return
         
-        # Update pixel animation
+        # Met à jour l'animation des pixels
         self.pixel_animation.update(dt, settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
         
-        # Increase difficulty over time
+        # Augmente la difficulté au fil du temps
         self.difficulty_timer += dt
         self.spawn_interval = max(
             settings.GAME_PIXEL_SPAWN_INTERVAL - (self.difficulty_timer * settings.GAME_PIXEL_SPAWN_DECREASE_RATE),
@@ -1002,13 +1005,13 @@ class Game:
         )
         self.pixel_base_speed = settings.GAME_PIXEL_BASE_SPEED + (self.difficulty_timer * settings.GAME_PIXEL_SPEED_INCREASE_RATE)
         
-        # Check if we should spawn a new pixel
+        # Vérifie si nous devons faire apparaître un nouveau pixel
         self.last_spawn_time += dt
         if self.last_spawn_time >= self.spawn_interval:
             self.spawn_pixel()
             self.last_spawn_time = 0
             
-        # Update all pixels
+        # Met à jour tous les pixels
         heart_x = settings.HEART_X_POSITION
         heart_y = settings.HEART_Y_POSITION
         
@@ -1018,7 +1021,7 @@ class Game:
                 pixels_to_remove.append(i)
                 continue
                 
-            # Define base rect for collision detection
+            # Définit le rectangle de base pour la détection de collision
             if hasattr(self, 'scaled_base_img') and self.scaled_base_img is not None:
                 base_rect = self.scaled_base_img.get_rect(
                     center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
@@ -1027,121 +1030,121 @@ class Game:
             else:
                 collision_rect = self.heart_rect
             
-            # Check for collision with heart/base
+            # Vérifie la collision avec le cœur/la base
             if pixel.check_collision(collision_rect) and not pixel.is_blinking:
-                # Start blinking effect instead of removing immediately
+                # Commence l'effet de clignotement au lieu de supprimer immédiatement
                 if pixel.type == "green":
-                    # Green pixels should pop immediately without sound or blinking
+                    # Les pixels verts doivent éclater immédiatement sans son ni clignotement
                     self.apply_powerup()
                     pixels_to_remove.append(i)
-                    # Create a particle effect without sound
+                    # Crée un effet de particules sans son
                     self.pixel_animation.spawn_particles(pixel.x, pixel.y, color="green")
                 else:
                     pixel.start_blinking()
                     
                     if pixel.type == "white" or pixel.type == "orange":
-                        # Mark pixel as one that will damage the heart when it finishes blinking
+                        # Marque le pixel comme un pixel qui endommagera le cœur lorsqu'il aura fini de clignoter
                         pixel.will_damage_heart = True
                     elif pixel.type == "red":
                         # Les pixels rouges donnent des points quand ils touchent la base
                         # Mais ne causent pas de dégâts au cœur
                         self.add_score(settings.RED_PIXEL_BASE_POINTS)
             
-        # Remove dead pixels (in reverse order to maintain correct indices)
+        # Supprime les pixels morts (dans l'ordre inverse pour maintenir les indices corrects)
         for i in sorted(pixels_to_remove, reverse=True):
             if i < len(self.pixels):
-                # Get the pixel before removing it
+                # Obtient le pixel avant de le supprimer
                 pixel = self.pixels[i]
                 
-                # Check if this pixel is blinking and just finished its animation
+                # Vérifie si ce pixel clignote et vient de terminer son animation
                 if pixel.is_blinking:
-                    # Create particle effect for the explosion
+                    # Crée un effet de particules pour l'explosion
                     self.pixel_animation.spawn_particles(pixel.x, pixel.y, color=pixel.type)
                     
-                    # Play explode sound for pixel popping
+                    # Joue le son d'explosion pour l'éclatement du pixel
                     if hasattr(self, 'explode_sound') and self.explode_sound:
                         self.play_sound(self.explode_sound)
                     
-                    # Apply effects based on pixel type
+                    # Applique les effets en fonction du type de pixel
                     if pixel.will_damage_heart:
-                        # Now is when we lose a life and show the red animation
+                        # C'est maintenant que nous perdons une vie et montrons l'animation rouge
                         self.lose_life()
                     elif pixel.will_apply_powerup:
-                        # Apply powerup when green pixel finishes blinking
+                        # Applique le powerup lorsque le pixel vert finit de clignoter
                         self.apply_powerup()
-                        # Play collect sound
+                        # Joue le son de collecte
                         if hasattr(self, 'collect_sound') and self.collect_sound:
                             self.play_sound(self.collect_sound)
                 
-                # Now remove the pixel
+                # Maintenant supprime le pixel
                 del self.pixels[i]
     
     def draw(self):
-        """Draw the game state."""
-        # Clear the screen
+        """Dessine l'état du jeu."""
+        # Efface l'écran
         self.screen.fill(settings.BLACK)
         
-        # Always draw the border as background first
+        # Dessine toujours d'abord la bordure comme arrière-plan
         if hasattr(self, 'scaled_border_img') and self.scaled_border_img is not None:
             self.screen.blit(self.scaled_border_img, self.border_rect)
         
         if self.exiting:
-            # During exit transition, first phase: elements falling
+            # Pendant la transition de sortie, première phase : éléments en chute
             if self.exit_timer < settings.TRANSITION_DURATION:
-                # Draw transition elements
+                # Dessine les éléments de transition
                 self.exit_transition.draw(self.screen)
                 
-                # Draw cursor
+                # Dessine le curseur
                 self.cursor_manager.draw(self.screen)
                 
-            # Second phase: white flash
+            # Deuxième phase : flash blanc
             elif self.exit_timer >= settings.TRANSITION_DURATION:
-                # Calculate flash alpha
+                # Calcule l'alpha du flash
                 flash_progress = min(self.exit_fade_timer / settings.FLASH_DURATION, 1.0)
-                alpha = int(255 * (1.0 - flash_progress))  # Start at 255, fade to 0
+                alpha = int(255 * (1.0 - flash_progress))  # Commence à 255, diminue jusqu'à 0
                 
-                # Draw white flash overlay
+                # Dessine le calque de flash blanc
                 flash_surface = pygame.Surface((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT), pygame.SRCALPHA)
                 flash_surface.fill((255, 255, 255, alpha))
                 self.screen.blit(flash_surface, (0, 0))
                 
-            # Update display
+            # Met à jour l'affichage
             pygame.display.flip()
             return
         
-        # Normal game rendering
-        # Draw all game elements - they will be visible through the white flash
-        # Draw all pixels
+        # Rendu normal du jeu
+        # Dessine tous les éléments du jeu - ils seront visibles à travers le flash blanc
+        # Dessine tous les pixels
         for pixel in self.pixels:
             pixel.draw(self.screen)
         
-        # First draw the base image under the heart
+        # Dessine d'abord l'image de base sous le cœur
         if hasattr(self, 'scaled_base_img') and self.scaled_base_img is not None:
             base_rect = self.scaled_base_img.get_rect(
                 center=(settings.HEART_X_POSITION, settings.HEART_Y_POSITION)
             )
             self.screen.blit(self.scaled_base_img, base_rect)
         
-        # Then draw the heart on top of the base
+        # Dessine ensuite le cœur au-dessus de la base
         self.screen.blit(self.heart_image, self.heart_rect)
         
-        # Draw exit button
+        # Dessine le bouton de sortie
         if hasattr(self, 'exit_image') and self.exit_image is not None:
             self.screen.blit(self.exit_image, self.exit_rect)
         
-        # Draw score
+        # Dessine le score
         if self.font:
             score_text = self.font.render(f"{settings.SCORE_PREFIX}{self.score}", True, settings.SCORE_TEXT_COLOR)
             score_rect = score_text.get_rect(midtop=(settings.SCORE_X_POSITION, settings.SCORE_Y_POSITION))
             self.screen.blit(score_text, score_rect)
         
-        # Draw pixel animation effects
+        # Dessine les effets d'animation de pixels
         self.pixel_animation.draw(self.screen)
         
-        # Draw the cursor
+        # Dessine le curseur
         self.cursor_manager.draw(self.screen)
         
-        # Draw fade-in effect
+        # Dessine l'effet de fondu à l'entrée
         if self.fading_in:
             fade_progress = 1.0 - min(self.fade_timer / self.fade_duration, 1.0)
             alpha = int(255 * fade_progress)
@@ -1149,64 +1152,64 @@ class Game:
             fade_surface.fill((255, 255, 255, alpha))
             self.screen.blit(fade_surface, (0, 0))
         
-        # Update display
+        # Met à jour l'affichage
         pygame.display.flip()
     
     def run(self):
-        """Run the game loop."""
+        """Exécute la boucle du jeu."""
         clock = pygame.time.Clock()
         last_time = pygame.time.get_ticks() / 1000.0
         
         while self.running:
-            # Calculate delta time
+            # Calcule le delta temps
             current_time = pygame.time.get_ticks() / 1000.0
             dt = current_time - last_time
             last_time = current_time
             
-            # Handle events
+            # Gère les événements
             if not self.handle_events():
                 break
                 
-            # Update game state
+            # Met à jour l'état du jeu
             self.update(dt)
             
-            # Draw
+            # Dessine
             self.draw()
             
-            # Cap frame rate
+            # Limite le taux de rafraîchissement
             clock.tick(settings.FPS)
             
         return self.running
 
     def play_sound(self, sound):
         """
-        Play a sound effect if sound effects are enabled.
+        Joue un effet sonore si les effets sonores sont activés.
         
         Args:
-            sound: The pygame Sound object to play
+            sound: L'objet Son pygame à jouer
         """
         if self.sound_effects_enabled:
             sound.play()
 
 def start(screen, skip_entry_flash=False, music_enabled=True, sound_effects_enabled=True):
     """
-    Start the game.
+    Démarre le jeu.
     
     Args:
-        screen (Surface): Pygame surface to draw on
-        skip_entry_flash (bool): If True, skip the initial fade in effect
-        music_enabled (bool): If False, disable music
-        sound_effects_enabled (bool): If False, disable sound effects
+        screen (Surface): Surface Pygame sur laquelle dessiner
+        skip_entry_flash (bool): Si True, ignore l'effet de fondu initial
+        music_enabled (bool): Si False, désactive la musique
+        sound_effects_enabled (bool): Si False, désactive les effets sonores
         
     Returns:
-        bool: True if game should return to menu, False if should exit
+        bool: True si le jeu doit retourner au menu, False s'il doit quitter
     """
-    # Always create a new Game instance to ensure fresh settings
+    # Crée toujours une nouvelle instance de Game pour garantir des paramètres frais
     game = Game(screen, skip_entry_flash, music_enabled, sound_effects_enabled)
     result = game.run()
     
-    # If game ended due to return_to_menu flag, always return True
-    # This ensures we go back to the main menu rather than exiting
+    # Si le jeu s'est terminé en raison du drapeau return_to_menu flag, renvoie toujours True
+    # Cela garantit que nous retournons au menu principal plutôt que de quitter
     if game.return_to_menu:
         return True
         

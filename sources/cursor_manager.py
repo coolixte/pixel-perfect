@@ -6,6 +6,9 @@ from settings import (
     CURSOR_NORMAL_SCALE, CURSOR_HOVER_SCALE, CURSOR_CLICK_SCALE, CURSOR_ZOOM_SCALE, CURSOR_PAINT_SCALE
 )
 
+# Cursor Manager ——————————————————————————————————————————————————————————————————————————————————————
+# —————————————————————————————————————————————————————————————————————————————————————————————————————
+
 class CursorManager:
     """
     Gère les états du curseur personnalisé et le rendu dans pygame.

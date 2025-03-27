@@ -1,6 +1,9 @@
 import pygame
 import settings
 
+# Screen Flash ———————————————————————————————————————————————————————————————————————————————————————
+# ————————————————————————————————————————————————————————————————————————————————————————————————————
+
 class ScreenFlash:
     """Gère l'effet d'animation de flash d'écran pour les transitions entre les scènes."""
     
